@@ -42,4 +42,8 @@ CREATE UNIQUE NONCLUSTERED INDEX [IX_SyncLogEntries_Entity_ParametersJson_SyncSt
     WHERE [SyncStatus] IN (1, 2)
 GO
 
+CREATE NONCLUSTERED INDEX [IX_SyncLogEntries_Entity_ParametersJson]
+    ON [dbo].[SyncLogEntries]([Entity], [ParametersJson])
+GO
+
 ```
