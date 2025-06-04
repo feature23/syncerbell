@@ -48,10 +48,10 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
 
             var priorSyncInfo = new PriorSyncInfo
             {
-                HighWaterMark = priorEntriesQuery.Where(i => i.HighWaterMark != null).Select(i => i.HighWaterMark).FirstOrDefault(),
-                LastSyncCompletedAt = priorEntriesQuery.Where(i => i.FinishedAt != null).Select(i => i.FinishedAt).FirstOrDefault(),
-                LastSyncLeasedAt = priorEntriesQuery.Where(i => i.LeasedAt != null).Select(i => i.LeasedAt).FirstOrDefault(),
-                LastSyncQueuedAt = priorEntriesQuery.Select(i => i.CreatedAt).FirstOrDefault(),
+                HighWaterMark = priorEntriesQuery.FirstOrDefault(i => i.HighWaterMark != null)?.HighWaterMark,
+                LastSyncCompletedAt = priorEntriesQuery.FirstOrDefault(i => i.FinishedAt != null)?.FinishedAt,
+                LastSyncLeasedAt = priorEntriesQuery.FirstOrDefault(i => i.LeasedAt != null)?.LeasedAt,
+                LastSyncQueuedAt = priorEntriesQuery.FirstOrDefault()?.CreatedAt,
             };
 
             if (logEntry == null)

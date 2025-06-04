@@ -16,11 +16,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 ? JsonSerializer.Serialize(entity.Parameters)
                 : null;
 
-            var logEntry = await context.SyncLogEntries
-                .Where(e => e.Entity == entity.Entity
-                            && e.ParametersJson == parametersJson
-                            && (e.SyncStatus == SyncStatus.Pending || e.SyncStatus == SyncStatus.InProgress))
-                .SingleOrDefaultAsync(cancellationToken);
+            var logEntry = await GetPendingOrInProgressLogEntry(entity, parametersJson, cancellationToken);
 
             if (logEntry?.LeaseExpiresAt != null && logEntry.LeaseExpiresAt < DateTime.UtcNow)
             {
@@ -38,32 +34,66 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 return new AcquireLogEntryResult(null, null);
             }
 
-            if (logEntry == null)
-            {
-                logEntry = new SyncLogEntry
-                {
-                    Entity = entity.Entity,
-                    ParametersJson = parametersJson,
-                    SyncStatus = SyncStatus.Pending,
-                    CreatedAt = DateTime.UtcNow,
-                    LeasedAt = DateTime.UtcNow,
-                    LeasedBy = options.MachineIdProvider(),
-                    LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration),
-                };
-                context.SyncLogEntries.Add(logEntry);
-            }
-            else
-            {
-                logEntry.LeasedAt = DateTime.UtcNow;
-                logEntry.LeasedBy = options.MachineIdProvider();
-                logEntry.LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
-                context.SyncLogEntries.Update(logEntry);
-            }
+            var priorSyncInfo = await GetPriorSyncInfo(entity, parametersJson, cancellationToken);
 
-            await context.SaveChangesAsync(cancellationToken);
+            logEntry = await CreateOrUpdateLogEntry(entity, parametersJson, logEntry, cancellationToken);
 
-            return new AcquireLogEntryResult(logEntry, null /* TODO */);
+            return new AcquireLogEntryResult(logEntry, priorSyncInfo);
         }, cancellationToken);
+    }
+
+    private async Task<PriorSyncInfo> GetPriorSyncInfo(SyncEntityOptions entity, string? parametersJson, CancellationToken cancellationToken)
+    {
+        var priorEntriesQuery = context.SyncLogEntries
+            .Where(e => e.Entity == entity.Entity && e.ParametersJson == parametersJson)
+            .OrderByDescending(e => e.CreatedAt);
+
+        return new PriorSyncInfo
+        {
+            HighWaterMark = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.HighWaterMark != null, cancellationToken))?.HighWaterMark,
+            LastSyncQueuedAt = (await priorEntriesQuery.FirstOrDefaultAsync(cancellationToken))?.CreatedAt,
+            LastSyncLeasedAt = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.LeasedAt != null, cancellationToken))?.LeasedAt,
+            LastSyncCompletedAt = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.FinishedAt != null, cancellationToken))?.FinishedAt,
+        };
+    }
+
+    private async Task<SyncLogEntry?> GetPendingOrInProgressLogEntry(SyncEntityOptions entity, string? parametersJson, CancellationToken cancellationToken)
+    {
+        return await context.SyncLogEntries
+            .Where(e => e.Entity == entity.Entity
+                        && e.ParametersJson == parametersJson
+                        && (e.SyncStatus == SyncStatus.Pending || e.SyncStatus == SyncStatus.InProgress))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<SyncLogEntry> CreateOrUpdateLogEntry(SyncEntityOptions entity,
+        string? parametersJson, SyncLogEntry? logEntry, CancellationToken cancellationToken)
+    {
+        if (logEntry == null)
+        {
+            logEntry = new SyncLogEntry
+            {
+                Entity = entity.Entity,
+                ParametersJson = parametersJson,
+                SyncStatus = SyncStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                LeasedAt = DateTime.UtcNow,
+                LeasedBy = options.MachineIdProvider(),
+                LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration),
+            };
+            context.SyncLogEntries.Add(logEntry);
+        }
+        else
+        {
+            logEntry.LeasedAt = DateTime.UtcNow;
+            logEntry.LeasedBy = options.MachineIdProvider();
+            logEntry.LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            context.SyncLogEntries.Update(logEntry);
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return logEntry;
     }
 
     public async Task UpdateLogEntry(SyncEntityOptions entity, ISyncLogEntry logEntry, CancellationToken cancellationToken = default)
