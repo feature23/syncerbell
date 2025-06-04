@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <PackageId>F23.Syncerbell</PackageId>
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
