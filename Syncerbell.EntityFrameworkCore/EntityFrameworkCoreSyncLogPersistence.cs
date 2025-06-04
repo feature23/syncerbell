@@ -8,7 +8,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
     SyncerbellOptions options)
     : ISyncLogPersistence
 {
-    public async Task<AcquireLogEntryResult> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
+    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
     {
         return await ResilientTransaction.New(context).ExecuteAsync(async () =>
         {
@@ -31,7 +31,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
             {
                 // If the log entry is already leased or in progress, return null as we can't acquire it yet.
                 // This could either be a pending or in-progress entry.
-                return new AcquireLogEntryResult(null, null);
+                return null;
             }
 
             var priorSyncInfo = await GetPriorSyncInfo(entity, parametersJson, cancellationToken);

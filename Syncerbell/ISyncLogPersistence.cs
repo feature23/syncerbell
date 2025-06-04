@@ -13,8 +13,8 @@ public interface ISyncLogPersistence
     /// </summary>
     /// <param name="entity">The entity for which to acquire a log entry.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>Asynchronously returns the acquired log entry, or null.</returns>
-    Task<AcquireLogEntryResult> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default);
+    /// <returns>Asynchronously returns the acquired log entry details, or null.</returns>
+    Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates the specified log entry in the persistence layer.

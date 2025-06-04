@@ -13,7 +13,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
     private readonly List<InMemoryEntry> entries = new();
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    public Task<AcquireLogEntryResult> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
+    public Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
     {
         var parametersJson = entity.Parameters != null
             ? System.Text.Json.JsonSerializer.Serialize(entity.Parameters)
@@ -39,7 +39,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
             {
                 // If the log entry is already leased or in progress, return null as we can't acquire it yet.
                 // This could either be a pending or in-progress entry.
-                return Task.FromResult(new AcquireLogEntryResult(null, null));
+                return Task.FromResult<AcquireLogEntryResult?>(null);
             }
 
             var priorEntriesQuery = entries
@@ -77,7 +77,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
             }
 
             // Clone the log entry so that it can't be modified outside the writer lock
-            return Task.FromResult(new AcquireLogEntryResult(logEntry.Clone(), priorSyncInfo));
+            return Task.FromResult<AcquireLogEntryResult?>(new AcquireLogEntryResult(logEntry.Clone(), priorSyncInfo));
         }
         finally
         {

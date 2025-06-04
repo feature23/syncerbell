@@ -7,4 +7,5 @@ public enum SyncStatus
     Completed = 3,
     Failed = 4,
     LeaseExpired = 5,
+    Skipped = 6,
 }

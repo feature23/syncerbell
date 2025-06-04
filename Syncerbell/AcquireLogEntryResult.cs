@@ -1,3 +1,3 @@
 namespace Syncerbell;
 
-public record AcquireLogEntryResult(ISyncLogEntry? SyncLogEntry, PriorSyncInfo? PriorSyncInfo);
+public record AcquireLogEntryResult(ISyncLogEntry SyncLogEntry, PriorSyncInfo PriorSyncInfo);
