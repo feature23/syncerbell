@@ -11,5 +11,12 @@ namespace Syncerbell;
 /// </summary>
 public interface IEntitySync
 {
+    /// <summary>
+    /// Runs the synchronization operation for the entity.
+    /// </summary>
+    /// <param name="trigger">The trigger that initiated the sync operation.</param>
+    /// <param name="entityOptions">The configured options for the entity to be synchronized.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>Returns a <see cref="Task{TResult}"/> that resolves to a <see cref="SyncResult"/> indicating the outcome of the sync operation. The result must not be null.</returns>
     Task<SyncResult> Run(SyncTrigger trigger, SyncEntityOptions entityOptions, CancellationToken cancellationToken = default);
 }

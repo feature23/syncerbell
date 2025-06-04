@@ -31,4 +31,12 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     public ISyncEligibilityStrategy Eligibility { get; set; } = new IntervalEligibilityStrategy(TimeSpan.FromDays(1));
 
     public TimeSpan? LeaseExpiration { get; set; }
+
+    public static SyncEntityOptions Create<T, TSync>(Action<SyncEntityOptions>? configureOptions = null)
+        where TSync : IEntitySync
+    {
+        var options = new SyncEntityOptions(typeof(T).Name, typeof(TSync));
+        configureOptions?.Invoke(options);
+        return options;
+    }
 }

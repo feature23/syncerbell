@@ -1,31 +1,62 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Syncerbell;
 
 public class SyncService(
     SyncerbellOptions options,
-    EntitySyncResolver entitySyncResolver,
+    IServiceProvider serviceProvider,
     ISyncLogPersistence syncLogPersistence,
     ILogger<SyncService> logger)
     : ISyncService
 {
-    public async Task SyncAllIfEligible(SyncTriggerType triggerType, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SyncResult>> SyncAllEligible(SyncTriggerType triggerType, CancellationToken cancellationToken = default)
     {
-        var entities = options.Entities;
+        var entities = new List<SyncEntityOptions>(options.Entities);
+
+        if (options.EntityProviderType is { } entityProviderType)
+        {
+            var entityProvider = serviceProvider.GetRequiredService(entityProviderType) as IEntityProvider
+                ?? throw new InvalidOperationException(
+                    $"Entity provider type {entityProviderType.FullName} is not registered or does not implement {nameof(IEntityProvider)}.");
+
+            var additionalEntities = await entityProvider.GetEntities(cancellationToken);
+
+            if (additionalEntities.Count == 0)
+            {
+                logger.LogWarning("Entity provider returned no additional entities. Using configured entities only.");
+            }
+            else
+            {
+                logger.LogInformation("Entity provider returned {Count} additional entities.", additionalEntities.Count);
+                entities.AddRange(additionalEntities);
+            }
+        }
 
         if (entities.Count == 0)
         {
             logger.LogWarning("No entities registered for sync. Skipping sync operation.");
-            return;
+            return [];
         }
+
+        var results = new List<SyncResult>();
 
         foreach (var entity in entities)
         {
-            await SyncEntityIfEligible(triggerType, entity, cancellationToken);
+            var result = await SyncEntityIfEligible(triggerType, entity, cancellationToken);
+
+            if (result is not null)
+            {
+                results.Add(result);
+            }
         }
+
+        logger.LogInformation("Sync operation completed for {Count} entities.", results.Count);
+
+        return results;
     }
 
-    private async Task SyncEntityIfEligible(SyncTriggerType triggerType,
+    private async Task<SyncResult?> SyncEntityIfEligible(SyncTriggerType triggerType,
         SyncEntityOptions entity,
         CancellationToken cancellationToken = default)
     {
@@ -36,7 +67,7 @@ public class SyncService(
             // If no log entry was acquired, we skip the sync for this entity.
             // This could be because the entity is already being processed or has a pending sync.
             logger.LogDebug("No log entry acquired for entity {EntityName}. Skipping sync.", entity.Entity);
-            return;
+            return null;
         }
 
         var trigger = new SyncTrigger
@@ -56,14 +87,16 @@ public class SyncService(
 
             await UpdateLogEntry(entity, log, SyncStatus.Skipped, "Entity is not eligible for sync", cancellationToken);
 
-            return;
+            return null;
         }
 
         logger.LogInformation(
             "Entity {EntityName} is eligible for sync. Trigger type: {TriggerType}.",
             entity.Entity, triggerType);
 
-        var sync = entitySyncResolver.Resolve(entity);
+        var sync = serviceProvider.GetRequiredService(entity.EntitySyncType) as IEntitySync
+            ?? throw new InvalidOperationException(
+                $"Entity sync type {entity.EntitySyncType.FullName} is not registered or does not implement {nameof(IEntitySync)}.");
 
         try
         {
@@ -76,12 +109,14 @@ public class SyncService(
 
                 await UpdateLogEntry(entity, log, SyncStatus.Failed, syncResult.Message ?? "The sync was unsuccessful", cancellationToken);
 
-                return;
+                return syncResult;
             }
 
             logger.LogInformation("Sync for entity {EntityName} completed successfully.", entity.Entity);
 
             await UpdateLogEntry(entity, log, SyncStatus.Completed, syncResult.Message ?? "The sync was successful", cancellationToken);
+
+            return syncResult;
         }
         catch (Exception ex)
         {
@@ -89,6 +124,8 @@ public class SyncService(
                 entity.Entity, triggerType);
 
             await UpdateLogEntry(entity, log, SyncStatus.Failed, ex.Message, cancellationToken);
+
+            return new SyncResult(Entity: entity, Success: false, Message: ex.Message);
         }
     }
 

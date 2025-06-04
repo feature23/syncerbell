@@ -13,6 +13,6 @@ public class MockToDoItemSync(ILogger<MockToDoItemSync> logger) : IEntitySync
 
         logger.LogInformation("MockToDoItemSync completed \"successfully\"");
 
-        return new SyncResult(Success: true);
+        return new SyncResult(Entity: entityOptions, Success: true);
     }
 }

@@ -11,11 +11,15 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<ISyncService, SyncService>();
-        services.AddSingleton<EntitySyncResolver>();
 
         foreach (var entity in options.Entities)
         {
             services.AddTransient(entity.EntitySyncType);
+        }
+
+        if (options.EntityProviderType != null)
+        {
+            services.AddSingleton(options.EntityProviderType);
         }
 
         return services;

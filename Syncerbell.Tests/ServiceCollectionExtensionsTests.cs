@@ -21,7 +21,6 @@ public class ServiceCollectionExtensionsTests
         var serviceProvider = services.BuildServiceProvider();
 
         Assert.NotNull(serviceProvider.GetService<ISyncService>());
-        Assert.NotNull(serviceProvider.GetService<EntitySyncResolver>());
         Assert.NotNull(serviceProvider.GetService<SyncerbellOptions>());
     }
 
@@ -44,7 +43,6 @@ public class ServiceCollectionExtensionsTests
         var serviceProvider = services.BuildServiceProvider();
 
         Assert.NotNull(serviceProvider.GetService<ISyncService>());
-        Assert.NotNull(serviceProvider.GetService<EntitySyncResolver>());
         Assert.NotNull(serviceProvider.GetService<SyncerbellOptions>());
         Assert.NotNull(serviceProvider.GetService<NonGenericEntitySync>());
         Assert.NotNull(serviceProvider.GetService<GenericEntitySync>());

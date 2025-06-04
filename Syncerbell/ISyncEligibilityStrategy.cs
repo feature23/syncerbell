@@ -1,10 +1,10 @@
 namespace Syncerbell;
 
 /// <summary>
-/// A strategy that determines if a sync operation is eligible based on a specified time interval.
+/// A strategy that determines if a sync operation is eligible based on the given trigger.
 /// <para />
-/// This strategy merely returns whether the entity is eligible for synchronization, not whether any
-/// data needs to be synchronized. For example, an entity may be eligible for sync with an interval
+/// This strategy should return whether the entity is eligible for synchronization at all, not whether any
+/// particular data needs to be synchronized. For example, an entity may be eligible for sync with an interval
 /// of 1 day if more than 1 day has passed, but if no data has changed since the last sync, no data
 /// will be synchronized.
 /// <para />
@@ -15,7 +15,7 @@ namespace Syncerbell;
 public interface ISyncEligibilityStrategy
 {
     /// <summary>
-    /// Determines if the entity is eligible for synchronization based on the provided trigger and entity options.
+    /// Determines if the entity is eligible for synchronization based on the provided trigger.
     /// <para />
     /// Note that this method is not called for manual sync triggers, as they are always eligible.
     /// </summary>

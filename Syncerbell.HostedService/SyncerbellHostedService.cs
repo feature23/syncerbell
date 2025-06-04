@@ -40,7 +40,7 @@ public class SyncerbellHostedService(
         logger.LogDebug("Syncerbell Hosted Service timer ticked at {Time}", DateTime.UtcNow);
         try
         {
-            syncService.SyncAllIfEligible(SyncTriggerType.Timer)
+            syncService.SyncAllEligible(SyncTriggerType.Timer)
                 .GetAwaiter()
                 .GetResult(); // Blocking call to ensure we handle exceptions properly
         }
