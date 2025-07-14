@@ -3,11 +3,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Syncerbell.EntityFrameworkCore;
 
+/// <summary>
+/// Provides an Entity Framework Core-based implementation of <see cref="ISyncLogPersistence"/> for durable sync log storage.
+/// </summary>
 public class EntityFrameworkCoreSyncLogPersistence(
     SyncLogDbContext context,
     SyncerbellOptions options)
     : ISyncLogPersistence
 {
+    /// <summary>
+    /// Attempts to acquire a log entry for the specified entity, creating or updating an entry as needed.
+    /// </summary>
+    /// <param name="entity">The entity options for which to acquire a log entry.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>An <see cref="AcquireLogEntryResult"/> containing the acquired log entry and prior sync info, or <c>null</c> if the entry is already leased.</returns>
     public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
     {
         return await ResilientTransaction.New(context).ExecuteAsync(async () =>
@@ -45,7 +54,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
     private async Task<PriorSyncInfo> GetPriorSyncInfo(SyncEntityOptions entity, string? parametersJson, CancellationToken cancellationToken)
     {
         var priorEntriesQuery = context.SyncLogEntries
-            .Where(e => e.Entity == entity.Entity && e.ParametersJson == parametersJson)
+            .Where(e => e.Entity == entity.Entity && e.ParametersJson == parametersJson && e.SchemaVersion == entity.SchemaVersion)
             .OrderByDescending(e => e.CreatedAt);
 
         return new PriorSyncInfo
@@ -62,6 +71,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
         return await context.SyncLogEntries
             .Where(e => e.Entity == entity.Entity
                         && e.ParametersJson == parametersJson
+                        && e.SchemaVersion == entity.SchemaVersion
                         && (e.SyncStatus == SyncStatus.Pending || e.SyncStatus == SyncStatus.InProgress))
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -75,6 +85,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
             {
                 Entity = entity.Entity,
                 ParametersJson = parametersJson,
+                SchemaVersion = entity.SchemaVersion,
                 SyncStatus = SyncStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 LeasedAt = DateTime.UtcNow,
@@ -96,6 +107,14 @@ public class EntityFrameworkCoreSyncLogPersistence(
         return logEntry;
     }
 
+    /// <summary>
+    /// Updates an existing log entry for the specified entity.
+    /// </summary>
+    /// <param name="entity">The entity options associated with the log entry.</param>
+    /// <param name="logEntry">The log entry to update. Must be of type <see cref="SyncLogEntry"/>.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="logEntry"/> is not of type <see cref="SyncLogEntry"/>.</exception>
+    /// <returns>A completed <see cref="Task"/>.</returns>
     public async Task UpdateLogEntry(SyncEntityOptions entity, ISyncLogEntry logEntry, CancellationToken cancellationToken = default)
     {
         if (logEntry is not SyncLogEntry entry)

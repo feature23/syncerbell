@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Syncerbell;
 
+/// <summary>
+/// Provides synchronization services for all registered entities, handling eligibility, logging, and execution.
+/// </summary>
 public class SyncService(
     SyncerbellOptions options,
     IServiceProvider serviceProvider,
@@ -10,6 +13,12 @@ public class SyncService(
     ILogger<SyncService> logger)
     : ISyncService
 {
+    /// <summary>
+    /// Synchronizes all eligible entities based on the specified trigger type.
+    /// </summary>
+    /// <param name="triggerType">The type of trigger initiating the sync operation.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A list of <see cref="SyncResult"/> objects representing the result of each sync operation.</returns>
     public async Task<IReadOnlyList<SyncResult>> SyncAllEligible(SyncTriggerType triggerType, CancellationToken cancellationToken = default)
     {
         var entities = new List<SyncEntityOptions>(options.Entities);

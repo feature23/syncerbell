@@ -1,12 +1,27 @@
 namespace Syncerbell;
 
+/// <summary>
+/// Contains information about the previous synchronization state for an entity, including high-water mark and sync timestamps.
+/// </summary>
 public class PriorSyncInfo
 {
+    /// <summary>
+    /// Gets the high-water mark value for incremental sync scenarios.
+    /// </summary>
     public required string? HighWaterMark { get; init; }
 
-    public required DateTime? LastSyncQueuedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time when the last sync was queued for the entity.
+    /// </summary>
+    public required DateTime? LastSyncQueuedAt { get; init; }
 
-    public required DateTime? LastSyncLeasedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time when the last sync was leased for the entity.
+    /// </summary>
+    public required DateTime? LastSyncLeasedAt { get; init; }
 
-    public required DateTime? LastSyncCompletedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the date and time when the last sync was completed for the entity.
+    /// </summary>
+    public required DateTime? LastSyncCompletedAt { get; init; }
 }
