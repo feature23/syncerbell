@@ -16,6 +16,7 @@ public class SyncerbellHostedService(
     : IHostedService
 {
     private Timer? _timer;
+    private CancellationTokenSource? _cts;
 
     /// <summary>
     /// Starts the Syncerbell hosted service and schedules periodic sync operations.
@@ -27,6 +28,7 @@ public class SyncerbellHostedService(
         logger.LogInformation("Starting Syncerbell Hosted Service ({StartupDelay} delay, {Interval} interval)",
             options.StartupDelay, options.CheckInterval);
 
+        _cts = new CancellationTokenSource();
         _timer = new Timer(TimerTick,
             state: null,
             dueTime: (int)options.StartupDelay.TotalMilliseconds,
@@ -43,7 +45,9 @@ public class SyncerbellHostedService(
     public Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Stopping Syncerbell Hosted Service");
-
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
         _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         _timer?.Dispose();
         _timer = null;
@@ -56,7 +60,7 @@ public class SyncerbellHostedService(
         logger.LogDebug("Syncerbell Hosted Service timer ticked at {Time}", DateTime.UtcNow);
         try
         {
-            syncService.SyncAllEligible(SyncTriggerType.Timer)
+            syncService.SyncAllEligible(SyncTriggerType.Timer, _cts?.Token ?? CancellationToken.None)
                 .GetAwaiter()
                 .GetResult(); // Blocking call to ensure we handle exceptions properly
         }
