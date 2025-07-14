@@ -1,9 +1,46 @@
 namespace Syncerbell;
 
+/// <summary>
+/// Represents options for synchronizing a specific entity type.
+/// </summary>
+/// <remarks>
+/// This constructor is a lower-level API for creating synchronization options for an entity.
+/// For most use cases, you should use the <see cref="Create{T,TSync}"/> factory method.
+/// </remarks>
+/// <param name="entity">The name of the entity to be synchronized.</param>
+/// <param name="entitySyncType">The type that implements the <see cref="IEntitySync"/> interface for this entity.</param>
+/// <seealso cref="Create{T,TSync}"/>
 public class SyncEntityOptions(string entity, Type entitySyncType)
 {
+    /// <summary>
+    /// The name of the entity to be synchronized.
+    /// </summary>
     public string Entity => entity;
 
+    /// <summary>
+    /// The optional type of the entity being synchronized.
+    /// </summary>
+    /// <remarks>
+    /// This is useful if the entity type is a .NET type in your application,
+    /// but can be null if the entity is a more abstract concept or if the type is not known at compile time.
+    /// </remarks>
+    public Type? EntityType { get; set; }
+
+    /// <summary>
+    /// An optional version of the schema for the entity.
+    /// </summary>
+    /// <remarks>
+    /// This value can be used to track changes in the entity schema over time.
+    /// If it differs from the existing sync log entries, it may trigger a full sync depending on
+    /// the implementation of the sync logic.
+    /// <para />
+    /// This value is automatically set by <see cref="Create{T,TSync}"/> if the entity type has a <see cref="SchemaVersionAttribute"/> applied to it.
+    /// </remarks>
+    public int? SchemaVersion { get; set; }
+
+    /// <summary>
+    /// The type of the entity sync implementation.
+    /// </summary>
     public Type EntitySyncType => entitySyncType;
 
     /// <summary>
@@ -30,12 +67,33 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     /// </summary>
     public ISyncEligibilityStrategy Eligibility { get; set; } = new IntervalEligibilityStrategy(TimeSpan.FromDays(1));
 
+    /// <summary>
+    /// The optional lease expiration time for the sync operation.
+    /// If not provided, it will use the global default lease expiration time defined in <see cref="SyncerbellOptions.DefaultLeaseExpiration"/>.
+    /// </summary>
     public TimeSpan? LeaseExpiration { get; set; }
 
-    public static SyncEntityOptions Create<T, TSync>(Action<SyncEntityOptions>? configureOptions = null)
+    /// <summary>
+    /// Creates a new instance of <see cref="SyncEntityOptions"/> for the specified entity type and sync implementation.
+    /// </summary>
+    /// <param name="configureOptions">A callback to configure additional options for the entity.</param>
+    /// <typeparam name="T">The type of the entity to synchronize.</typeparam>
+    /// <typeparam name="TSync">The type that implements the <see cref="IEntitySync"/> interface for this entity.</typeparam>
+    /// <returns>Returns a new instance of <see cref="SyncEntityOptions"/>.</returns>
+    public static SyncEntityOptions Create<T, TSync>(
+        Action<SyncEntityOptions>? configureOptions = null)
         where TSync : IEntitySync
     {
-        var options = new SyncEntityOptions(typeof(T).Name, typeof(TSync));
+        var options = new SyncEntityOptions(typeof(T).Name, typeof(TSync))
+        {
+            EntityType = typeof(T),
+        };
+
+        if (typeof(T).GetCustomAttributes(typeof(SchemaVersionAttribute), false).FirstOrDefault() is SchemaVersionAttribute schemaVersionAttribute)
+        {
+            options.SchemaVersion = schemaVersionAttribute.Version;
+        }
+
         configureOptions?.Invoke(options);
         return options;
     }

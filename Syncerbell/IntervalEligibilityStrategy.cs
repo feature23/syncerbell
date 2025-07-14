@@ -9,8 +9,18 @@ namespace Syncerbell;
 /// <param name="interval">The time interval that must elapse since the last sync for the entity to be eligible for synchronization.</param>
 public class IntervalEligibilityStrategy(TimeSpan interval) : ISyncEligibilityStrategy
 {
+    /// <summary>
+    /// Gets the time interval that must elapse since the last sync for the entity to be eligible for synchronization.
+    /// </summary>
     public TimeSpan Interval { get; } = interval;
 
+    /// <summary>
+    /// Determines whether the entity is eligible for synchronization based on the configured interval.
+    /// </summary>
+    /// <param name="trigger">The trigger that initiated the sync check, including prior sync info.</param>
+    /// <param name="entityOptions">The options for the entity being checked.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="ValueTask{Boolean}"/> indicating whether the entity is eligible for synchronization.</returns>
     public ValueTask<bool> IsEligibleToSync(SyncTrigger trigger,
         SyncEntityOptions entityOptions,
         CancellationToken cancellationToken = default)

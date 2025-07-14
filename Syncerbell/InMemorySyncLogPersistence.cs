@@ -12,6 +12,12 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
     private readonly ReaderWriterLockSlim _lock = new();
     private readonly List<InMemoryEntry> entries = new();
 
+    /// <summary>
+    /// Attempts to acquire a log entry for the specified entity, creating a new entry if necessary.
+    /// </summary>
+    /// <param name="entity">The entity options for which to acquire a log entry.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>An <see cref="AcquireLogEntryResult"/> containing the acquired log entry and prior sync info, or <c>null</c> if the entry is already leased.</returns>
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
     {
@@ -26,6 +32,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
             var logEntry = entries
                 .SingleOrDefault(e => e.Entity == entity.Entity
                                       && e.ParametersJson == parametersJson
+                                      && e.SchemaVersion == entity.SchemaVersion
                                       && e.SyncStatus is SyncStatus.Pending or SyncStatus.InProgress);
 
             if (logEntry?.LeaseExpiresAt != null && logEntry.LeaseExpiresAt < DateTime.UtcNow)
@@ -43,7 +50,11 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
             }
 
             var priorEntriesQuery = entries
-                .Where(e => e.Entity == entity.Entity && e.ParametersJson == parametersJson && e.SyncStatus != SyncStatus.Pending && e.SyncStatus != SyncStatus.InProgress)
+                .Where(e => e.Entity == entity.Entity
+                            && e.ParametersJson == parametersJson
+                            && e.SchemaVersion == entity.SchemaVersion
+                            && e.SyncStatus != SyncStatus.Pending
+                            && e.SyncStatus != SyncStatus.InProgress)
                 .OrderByDescending(e => e.CreatedAt);
 
             var priorSyncInfo = new PriorSyncInfo
@@ -61,6 +72,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
                     Entity = entity.Entity,
                     ParametersJson = parametersJson,
                     SyncStatus = SyncStatus.Pending,
+                    SchemaVersion = entity.SchemaVersion,
                     CreatedAt = DateTime.UtcNow,
                     LeasedAt = DateTime.UtcNow,
                     LeasedBy = options.MachineIdProvider(),
@@ -85,6 +97,15 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
         }
     }
 
+    /// <summary>
+    /// Updates an existing log entry for the specified entity.
+    /// </summary>
+    /// <param name="entity">The entity options associated with the log entry.</param>
+    /// <param name="logEntry">The log entry to update. Must be of type <see cref="InMemoryEntry"/>.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="logEntry"/> is not of type <see cref="InMemoryEntry"/>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the log entry cannot be found for update.</exception>
+    /// <returns>A completed <see cref="Task"/>.</returns>
     public Task UpdateLogEntry(SyncEntityOptions entity, ISyncLogEntry logEntry, CancellationToken cancellationToken = default)
     {
         if (logEntry is not InMemoryEntry entry)
@@ -94,7 +115,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
         {
             _lock.EnterWriteLock();
 
-            var existingEntryIndex = entries.FindIndex(e => e.Entity == entry.Entity && e.ParametersJson == entry.ParametersJson);
+            var existingEntryIndex = entries.FindIndex(e => e.Entity == entry.Entity && e.ParametersJson == entry.ParametersJson && e.SchemaVersion == entry.SchemaVersion);
 
             if (existingEntryIndex < 0)
             {
@@ -121,6 +142,8 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
 
         public string? ParametersJson { get; init; }
 
+        public int? SchemaVersion { get; init; }
+
         public SyncStatus SyncStatus { get; set; }
 
         public DateTime CreatedAt { get; init; }
@@ -143,6 +166,7 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
             {
                 Entity = Entity,
                 ParametersJson = ParametersJson,
+                SchemaVersion = SchemaVersion,
                 SyncStatus = SyncStatus,
                 CreatedAt = CreatedAt,
                 LeasedAt = LeasedAt,

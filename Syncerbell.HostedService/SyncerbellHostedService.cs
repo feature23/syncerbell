@@ -3,6 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Syncerbell.HostedService;
 
+/// <summary>
+/// Provides a hosted service that periodically triggers synchronization for all eligible entities using Syncerbell.
+/// </summary>
+/// <param name="syncService">The sync service used to perform synchronization operations.</param>
+/// <param name="options">The options for configuring the hosted service's scheduling and behavior.</param>
+/// <param name="logger">The logger used for diagnostic and operational messages.</param>
 public class SyncerbellHostedService(
     ISyncService syncService,
     SyncerbellHostedServiceOptions options,
@@ -11,6 +17,11 @@ public class SyncerbellHostedService(
 {
     private Timer? _timer;
 
+    /// <summary>
+    /// Starts the Syncerbell hosted service and schedules periodic sync operations.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A completed <see cref="Task"/>.</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Syncerbell Hosted Service ({StartupDelay} delay, {Interval} interval)",
@@ -24,6 +35,11 @@ public class SyncerbellHostedService(
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Stops the Syncerbell hosted service and cancels any scheduled sync operations.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A completed <see cref="Task"/>.</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Stopping Syncerbell Hosted Service");
