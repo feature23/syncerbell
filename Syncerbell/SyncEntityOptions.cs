@@ -5,11 +5,12 @@ namespace Syncerbell;
 /// </summary>
 /// <remarks>
 /// This constructor is a lower-level API for creating synchronization options for an entity.
-/// For most use cases, you should use the <see cref="Create{T,TSync}"/> factory method.
+/// For most use cases, you should use the <see cref="Create{T,TSync}(Action{SyncEntityOptions})"/> factory method.
 /// </remarks>
 /// <param name="entity">The name of the entity to be synchronized.</param>
 /// <param name="entitySyncType">The type that implements the <see cref="IEntitySync"/> interface for this entity.</param>
-/// <seealso cref="Create{T,TSync}"/>
+/// <seealso cref="Create{T,TSync}(Action{SyncEntityOptions})"/>
+/// <seealso cref="Create{T,TSync}(string, Action{SyncEntityOptions})"/>
 public class SyncEntityOptions(string entity, Type entitySyncType)
 {
     /// <summary>
@@ -34,7 +35,8 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     /// If it differs from the existing sync log entries, it may trigger a full sync depending on
     /// the implementation of the sync logic.
     /// <para />
-    /// This value is automatically set by <see cref="Create{T,TSync}"/> if the entity type has a <see cref="SchemaVersionAttribute"/> applied to it.
+    /// This value is automatically set by <see cref="Create{T,TSync}(string, Action{SyncEntityOptions})"/>
+    /// if the entity type has a <see cref="SchemaVersionAttribute"/> applied to it.
     /// </remarks>
     public int? SchemaVersion { get; set; }
 
