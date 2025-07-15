@@ -88,7 +88,7 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     /// <summary>
     /// Creates a new instance of <see cref="SyncEntityOptions"/> for the specified entity type and sync implementation.
     /// </summary>
-    /// <param name="entityName">The name of the entity to synchronize, if overriding the default name derived from the type.</param>
+    /// <param name="entityName">The name of the entity to synchronize. This overrides the default name which would be derived from the type name.</param>
     /// <param name="configureOptions">A callback to configure additional options for the entity.</param>
     /// <typeparam name="T">The type of the entity to synchronize.</typeparam>
     /// <typeparam name="TSync">The type that implements the <see cref="IEntitySync"/> interface for this entity.</typeparam>
