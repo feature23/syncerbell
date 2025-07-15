@@ -83,8 +83,22 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     public static SyncEntityOptions Create<T, TSync>(
         Action<SyncEntityOptions>? configureOptions = null)
         where TSync : IEntitySync
+        => Create<T, TSync>(typeof(T).Name, configureOptions);
+
+    /// <summary>
+    /// Creates a new instance of <see cref="SyncEntityOptions"/> for the specified entity type and sync implementation.
+    /// </summary>
+    /// <param name="entityName">The name of the entity to synchronize, if overriding the default name derived from the type.</param>
+    /// <param name="configureOptions">A callback to configure additional options for the entity.</param>
+    /// <typeparam name="T">The type of the entity to synchronize.</typeparam>
+    /// <typeparam name="TSync">The type that implements the <see cref="IEntitySync"/> interface for this entity.</typeparam>
+    /// <returns>Returns a new instance of <see cref="SyncEntityOptions"/>.</returns>
+    public static SyncEntityOptions Create<T, TSync>(
+        string entityName,
+        Action<SyncEntityOptions>? configureOptions = null)
+        where TSync : IEntitySync
     {
-        var options = new SyncEntityOptions(typeof(T).Name, typeof(TSync))
+        var options = new SyncEntityOptions(entityName, typeof(TSync))
         {
             EntityType = typeof(T),
         };

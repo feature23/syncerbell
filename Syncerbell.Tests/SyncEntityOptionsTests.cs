@@ -41,6 +41,33 @@ public class SyncEntityOptionsTests
         Assert.Null(options.SchemaVersion);
     }
 
+    [Fact]
+    public void Create_WithEntityName_ShouldSetEntityNameAndSyncType()
+    {
+        // Arrange
+        const string customEntityName = "CustomEntityName";
+
+        // Act
+        var options = SyncEntityOptions.Create<EntityWithoutSchemaVersion, DummySync>(customEntityName);
+
+        // Assert
+        Assert.Equal(customEntityName, options.Entity);
+        Assert.Equal(typeof(DummySync), options.EntitySyncType);
+        Assert.Equal(typeof(EntityWithoutSchemaVersion), options.EntityType);
+    }
+
+    [Fact]
+    public void Create_Generic_ShouldSetEntityNameFromType()
+    {
+        // Act
+        var options = SyncEntityOptions.Create<EntityWithoutSchemaVersion, DummySync>();
+
+        // Assert
+        Assert.Equal(nameof(EntityWithoutSchemaVersion), options.Entity);
+        Assert.Equal(typeof(DummySync), options.EntitySyncType);
+        Assert.Equal(typeof(EntityWithoutSchemaVersion), options.EntityType);
+    }
+
     [SchemaVersion(5)]
     private class EntityWithSchemaVersion { }
 
