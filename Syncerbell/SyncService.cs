@@ -94,7 +94,7 @@ public class SyncService(
                 "Entity {EntityName} is not eligible for sync based on the current trigger type {TriggerType}.",
                 entity.Entity, triggerType);
 
-            await UpdateLogEntry(entity, log, SyncStatus.Skipped, "Entity is not eligible for sync", cancellationToken);
+            await UpdateLogEntry(log, SyncStatus.Skipped, new SyncResult(entity, Success: false, Message: "Entity is not eligible for sync"), cancellationToken);
 
             return null;
         }
@@ -116,14 +116,14 @@ public class SyncService(
                 logger.LogWarning("Sync for entity {EntityName} failed with message: {Message}",
                     entity.Entity, syncResult.Message);
 
-                await UpdateLogEntry(entity, log, SyncStatus.Failed, syncResult.Message ?? "The sync was unsuccessful", cancellationToken);
+                await UpdateLogEntry(log, SyncStatus.Failed, syncResult, cancellationToken);
 
                 return syncResult;
             }
 
             logger.LogInformation("Sync for entity {EntityName} completed successfully.", entity.Entity);
 
-            await UpdateLogEntry(entity, log, SyncStatus.Completed, syncResult.Message ?? "The sync was successful", cancellationToken);
+            await UpdateLogEntry(log, SyncStatus.Completed, syncResult, cancellationToken);
 
             return syncResult;
         }
@@ -132,17 +132,18 @@ public class SyncService(
             logger.LogError(ex, "Error during sync for entity {EntityName} with trigger type {TriggerType}.",
                 entity.Entity, triggerType);
 
-            await UpdateLogEntry(entity, log, SyncStatus.Failed, ex.Message, cancellationToken);
+            await UpdateLogEntry(log, SyncStatus.Failed, new SyncResult(entity, Success: false, Message: ex.Message), cancellationToken);
 
             return new SyncResult(Entity: entity, Success: false, Message: ex.Message);
         }
     }
 
-    private async Task UpdateLogEntry(SyncEntityOptions entity, ISyncLogEntry log, SyncStatus status, string resultMessage, CancellationToken cancellationToken)
+    private async Task UpdateLogEntry(ISyncLogEntry log, SyncStatus status, SyncResult syncResult, CancellationToken cancellationToken)
     {
         log.SyncStatus = status;
-        log.ResultMessage = resultMessage;
+        log.ResultMessage = syncResult.Message ?? (syncResult.Success ? "The sync was successful" : "The sync failed");
         log.FinishedAt = DateTime.UtcNow;
-        await syncLogPersistence.UpdateLogEntry(entity, log, cancellationToken);
+        log.HighWaterMark = syncResult.HighWaterMark;
+        await syncLogPersistence.UpdateLogEntry(syncResult.Entity, log, cancellationToken);
     }
 }
