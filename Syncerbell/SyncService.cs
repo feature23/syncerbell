@@ -13,6 +13,9 @@ public class SyncService(
     ILogger<SyncService> logger)
     : ISyncService
 {
+    private const string SyncSuccessMessage = "Sync completed successfully.";
+    private const string SyncFailedMessage = "The sync failed. Check logs for details.";
+
     /// <summary>
     /// Synchronizes all eligible entities based on the specified trigger type.
     /// </summary>
