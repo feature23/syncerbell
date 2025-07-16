@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "release/*" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "release/*" ]
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
       if: github.event_name == 'push'
       uses: actions/upload-artifact@v4
       with:
-        name: nuget-packages
+        name: Syncerbell-${{ env.NBGV_NuGetPackageVersion }}
         path: |
           ./artifacts/*.nupkg
           ./artifacts/*.snupkg
