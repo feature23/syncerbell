@@ -141,7 +141,7 @@ public class SyncService(
     private async Task UpdateLogEntry(ISyncLogEntry log, SyncStatus status, SyncResult syncResult, CancellationToken cancellationToken)
     {
         log.SyncStatus = status;
-        log.ResultMessage = syncResult.Message ?? (syncResult.Success ? "The sync was successful" : "The sync failed");
+        log.ResultMessage = syncResult.Message ?? (syncResult.Success ? SyncSuccessMessage : SyncFailedMessage);
         log.FinishedAt = DateTime.UtcNow;
         log.HighWaterMark = syncResult.HighWaterMark;
         await syncLogPersistence.UpdateLogEntry(syncResult.Entity, log, cancellationToken);
