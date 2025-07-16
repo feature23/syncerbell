@@ -35,7 +35,7 @@ jobs:
       if: github.event_name == 'push'
       uses: actions/upload-artifact@v4
       with:
-        name: "Syncerbell-$NuGetPackageVersion"
+        name: Syncerbell-${{ env.NBGV_NuGetPackageVersion }}
         path: |
           ./artifacts/*.nupkg
           ./artifacts/*.snupkg
