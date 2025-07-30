@@ -29,6 +29,9 @@ CREATE TABLE [dbo].[SyncLogEntries] (
     FinishedAt datetime2 NULL,
     ResultMessage nvarchar(MAX) NULL,
     HighWaterMark varchar(100) NULL,
+    ProgressValue int NULL,
+    ProgressMax int NULL,
+    RecordCount int NULL,
     RowVersion rowversion,
     CONSTRAINT [PK_SyncLogEntries] PRIMARY KEY CLUSTERED ([Id]),
     CONSTRAINT [CK_SyncLogEntries_LeasedAt_LeaseExpiresAt] CHECK (
@@ -49,7 +52,7 @@ GO
 
 ```
 
-## Migrating from 0.2.0 to 0.3.0
+## Migrating to 0.3.0
 
 The 0.3.0 release adds the SchemaVersion column to the SyncLogEntries table. 
 If you are upgrading from 0.2.0 and not using dacpac deployment, you need to run the following SQL script
@@ -73,5 +76,23 @@ GO
 
 CREATE NONCLUSTERED INDEX [IX_SyncLogEntries_Entity_ParametersJson_SchemaVersion]
     ON [dbo].[SyncLogEntries]([Entity], [ParametersJson], [SchemaVersion]);
+GO
+```
+
+## Migrating to 0.5.0
+
+The 0.5.0 release adds several new columns to the SyncLogEntries table for enhanced tracking capabilities:
+- `ProgressValue` for tracking current progress amount
+- `ProgressMax` for tracking maximum progress value
+- `RecordCount` for tracking total number of records processed
+
+If you are upgrading from an earlier version and not using dacpac deployment, you need to run the following SQL script
+to add the new columns:
+
+```tsql
+ALTER TABLE [dbo].[SyncLogEntries]
+ADD [ProgressValue] int NULL,
+    [ProgressMax] int NULL,
+    [RecordCount] int NULL;
 GO
 ```

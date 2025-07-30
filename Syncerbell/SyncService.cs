@@ -112,7 +112,8 @@ public class SyncService(
 
         try
         {
-            var syncResult = await sync.Run(trigger, entity, cancellationToken);
+            var context = new EntitySyncContext(trigger, entity, (progress) => ReportProgress(entity, log, progress, cancellationToken));
+            var syncResult = await sync.Run(context, cancellationToken);
 
             if (!syncResult.Success)
             {
@@ -139,6 +140,25 @@ public class SyncService(
 
             return new SyncResult(Entity: entity, Success: false, Message: ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Reports progress for a sync operation by updating the log entry with progress information.
+    /// </summary>
+    /// <param name="entity">The entity being synchronized.</param>
+    /// <param name="logEntry">The log entry to update with progress information.</param>
+    /// <param name="progress">The progress information containing current value and maximum.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task representing the asynchronous progress reporting operation.</returns>
+    private async Task ReportProgress(SyncEntityOptions entity, ISyncLogEntry logEntry, Progress progress, CancellationToken cancellationToken)
+    {
+        logEntry.ProgressValue = progress.Value;
+        logEntry.ProgressMax = progress.Max;
+
+        logger.LogDebug("Reporting progress for entity {EntityName}: {ProgressValue}/{ProgressMax} ({ProgressPercentage:P})",
+            entity.Entity, progress.Value, progress.Max, logEntry.ProgressPercentage);
+
+        await syncLogPersistence.UpdateLogEntry(entity, logEntry, cancellationToken);
     }
 
     private async Task UpdateLogEntry(ISyncLogEntry log, SyncStatus status, SyncResult syncResult, CancellationToken cancellationToken)

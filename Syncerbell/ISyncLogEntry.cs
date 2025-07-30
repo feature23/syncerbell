@@ -44,4 +44,32 @@ public interface ISyncLogEntry
     /// Gets or sets the high-water mark value for incremental sync scenarios.
     /// </summary>
     string? HighWaterMark { get; set; }
+
+    /// <summary>
+    /// Gets or sets the latest progress amount for the sync operation.
+    /// Can be null if progress tracking is not implemented or if the operation has not yet started.
+    /// </summary>
+    int? ProgressValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum value for progress tracking.
+    /// This is useful for operations where progress can be measured against a known maximum,
+    /// such as the total number of items to be processed.
+    /// Can be null if the maximum is not known or applicable.
+    /// </summary>
+    int? ProgressMax { get; set; }
+
+    /// <summary>
+    /// Gets the progress percentage as a float value between 0 and 1.
+    /// Multiply by 100 to get a percentage value for display purposes.
+    /// Returns null if ProgressValue is not set or ProgressMax is zero or less.
+    /// </summary>
+    float? ProgressPercentage => ProgressValue.HasValue && ProgressMax is > 0
+        ? (float)ProgressValue.Value / ProgressMax.Value
+        : null;
+
+    /// <summary>
+    /// Gets or sets the total number of records processed during the sync operation.
+    /// </summary>
+    int? RecordCount { get; set; }
 }
