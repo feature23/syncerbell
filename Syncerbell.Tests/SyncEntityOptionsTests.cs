@@ -75,7 +75,7 @@ public class SyncEntityOptionsTests
 
     private class DummySync : IEntitySync
     {
-        public Task<SyncResult> Run(SyncTrigger trigger, SyncEntityOptions entityOptions, CancellationToken cancellationToken = default)
+        public Task<SyncResult> Run(EntitySyncContext context, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

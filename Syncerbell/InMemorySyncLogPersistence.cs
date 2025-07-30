@@ -152,13 +152,19 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
 
         public string? LeasedBy { get; set; }
 
+        public DateTime? LeaseExpiresAt { get; set; }
+
         public DateTime? FinishedAt { get; set; }
 
         public string? ResultMessage { get; set; }
 
         public string? HighWaterMark { get; set; }
 
-        public DateTime? LeaseExpiresAt { get; set; }
+        public int? ProgressValue { get; set; }
+
+        public int? ProgressMax { get; set; }
+
+        public int? RecordCount { get; set; }
 
         public InMemoryEntry Clone()
         {
@@ -174,7 +180,10 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
                 FinishedAt = FinishedAt,
                 ResultMessage = ResultMessage,
                 HighWaterMark = HighWaterMark,
-                LeaseExpiresAt = LeaseExpiresAt
+                LeaseExpiresAt = LeaseExpiresAt,
+                ProgressValue = ProgressValue,
+                ProgressMax = ProgressMax,
+                RecordCount = RecordCount
             };
         }
     }

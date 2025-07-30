@@ -54,17 +54,17 @@ public class ServiceCollectionExtensionsTests
     // ReSharper disable once ClassNeverInstantiated.Local
     private class GenericEntitySync : IEntitySync
     {
-        public Task<SyncResult> Run(SyncTrigger trigger, SyncEntityOptions entityOptions, CancellationToken cancellationToken = default)
+        public Task<SyncResult> Run(EntitySyncContext context, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new SyncResult(context.Entity, true));
         }
     }
 
     private class NonGenericEntitySync : IEntitySync
     {
-        public Task<SyncResult> Run(SyncTrigger trigger, SyncEntityOptions entityOptions, CancellationToken cancellationToken = default)
+        public Task<SyncResult> Run(EntitySyncContext context, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new SyncResult(context.Entity, true));
         }
     }
 }

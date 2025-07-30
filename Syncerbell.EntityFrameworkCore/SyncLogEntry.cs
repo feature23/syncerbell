@@ -37,51 +37,44 @@ public class SyncLogEntry : ISyncLogEntry
     /// </summary>
     public int? SchemaVersion { get; init; }
 
-    /// <summary>
-    /// Gets or sets the current status of the sync operation.
-    /// </summary>
+    /// <inheritdoc />
     public SyncStatus SyncStatus { get; set; }
 
-    /// <summary>
-    /// Gets the date and time when the log entry was created.
-    /// </summary>
+    /// <inheritdoc />
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 
-    /// <summary>
-    /// Gets or sets the date and time when the sync operation was leased.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime? LeasedAt { get; set; }
 
-    /// <summary>
-    /// Gets or sets the date and time when the lease for the sync operation expires.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime? LeaseExpiresAt { get; set; }
 
-    /// <summary>
-    /// Gets or sets the identifier of the machine or process that leased the sync operation.
-    /// </summary>
+    /// <inheritdoc />
     [StringLength(maximumLength: 100)]
     [Unicode(false)]
     public string? LeasedBy { get; set; }
 
-    /// <summary>
-    /// Gets or sets the date and time when the sync operation finished.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime? FinishedAt { get; set; }
 
-    /// <summary>
-    /// Gets or sets the result message of the sync operation, if any.
-    /// </summary>
+    /// <inheritdoc />
     // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
     public string? ResultMessage { get; set; }
 
-    /// <summary>
-    /// Gets or sets the high water mark for the sync operation, if any.
-    /// </summary>
+    /// <inheritdoc />
     [StringLength(maximumLength: 100)]
     [Unicode(false)]
     public string? HighWaterMark { get; set; }
+
+    /// <inheritdoc />
+    public int? ProgressValue { get; set; }
+
+    /// <inheritdoc />
+    public int? ProgressMax { get; set; }
+
+    /// <inheritdoc />
+    public int? RecordCount { get; set; }
 
     /// <summary>
     /// Gets or sets the row version for concurrency checking.

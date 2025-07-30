@@ -33,9 +33,9 @@ public class AlwaysEligibleStrategyTests
 
     private class TestEntitySync : IEntitySync
     {
-        public Task<SyncResult> Run(SyncTrigger trigger, SyncEntityOptions entityOptions, CancellationToken cancellationToken = default)
+        public Task<SyncResult> Run(EntitySyncContext context, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new SyncResult(context.Entity, true));
         }
     }
 }
