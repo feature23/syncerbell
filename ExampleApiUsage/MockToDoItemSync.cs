@@ -13,7 +13,7 @@ public class MockToDoItemSync(ILogger<MockToDoItemSync> logger) : IEntitySync
         const int totalItems = 10;
 
         // Report initial progress
-        await context.ReportProgress(new Progress(0, totalItems));
+        await context.ReportProgress(0, totalItems);
 
         for (int i = 1; i <= totalItems; i++)
         {
@@ -23,7 +23,7 @@ public class MockToDoItemSync(ILogger<MockToDoItemSync> logger) : IEntitySync
             await Task.Delay(500, cancellationToken);
 
             // Report progress after each item
-            await context.ReportProgress(new Progress(i, totalItems));
+            await context.ReportProgress(i, totalItems);
 
             logger.LogDebug("Completed item {ItemNumber}, progress: {Progress:P}", i, (float)i / totalItems);
         }
