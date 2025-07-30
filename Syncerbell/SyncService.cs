@@ -16,12 +16,7 @@ public class SyncService(
     private const string SyncSuccessMessage = "Sync completed successfully.";
     private const string SyncFailedMessage = "The sync failed. Check logs for details.";
 
-    /// <summary>
-    /// Synchronizes all eligible entities based on the specified trigger type.
-    /// </summary>
-    /// <param name="triggerType">The type of trigger initiating the sync operation.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A list of <see cref="SyncResult"/> objects representing the result of each sync operation.</returns>
+    /// <inheritdoc />
     public async Task<IReadOnlyList<SyncResult>> SyncAllEligible(SyncTriggerType triggerType, CancellationToken cancellationToken = default)
     {
         var entities = new List<SyncEntityOptions>(options.Entities);
@@ -68,7 +63,8 @@ public class SyncService(
         return results;
     }
 
-    private async Task<SyncResult?> SyncEntityIfEligible(SyncTriggerType triggerType,
+    /// <inheritdoc />
+    public async Task<SyncResult?> SyncEntityIfEligible(SyncTriggerType triggerType,
         SyncEntityOptions entity,
         CancellationToken cancellationToken = default)
     {
