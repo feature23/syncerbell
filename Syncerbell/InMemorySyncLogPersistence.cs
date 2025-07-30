@@ -152,6 +152,10 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
 
         public string? LeasedBy { get; set; }
 
+        public string? QueueMessageId { get; set; }
+
+        public DateTime? QueuedAt { get; set; }
+
         public DateTime? LeaseExpiresAt { get; set; }
 
         public DateTime? FinishedAt { get; set; }
@@ -177,10 +181,12 @@ public class InMemorySyncLogPersistence(SyncerbellOptions options) : ISyncLogPer
                 CreatedAt = CreatedAt,
                 LeasedAt = LeasedAt,
                 LeasedBy = LeasedBy,
+                QueueMessageId = QueueMessageId,
+                QueuedAt = QueuedAt,
+                LeaseExpiresAt = LeaseExpiresAt,
                 FinishedAt = FinishedAt,
                 ResultMessage = ResultMessage,
                 HighWaterMark = HighWaterMark,
-                LeaseExpiresAt = LeaseExpiresAt,
                 ProgressValue = ProgressValue,
                 ProgressMax = ProgressMax,
                 RecordCount = RecordCount

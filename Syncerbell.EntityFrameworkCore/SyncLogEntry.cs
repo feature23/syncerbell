@@ -56,6 +56,14 @@ public class SyncLogEntry : ISyncLogEntry
     public string? LeasedBy { get; set; }
 
     /// <inheritdoc />
+    [StringLength(maximumLength: 100)]
+    [Unicode(false)]
+    public string? QueueMessageId { get; set; }
+
+    /// <inheritdoc />
+    public DateTime? QueuedAt { get; set; }
+
+    /// <inheritdoc />
     public DateTime? FinishedAt { get; set; }
 
     /// <inheritdoc />

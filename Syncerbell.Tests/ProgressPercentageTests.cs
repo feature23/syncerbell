@@ -9,6 +9,8 @@ public class ProgressPercentageTests
         public DateTime? LeasedAt { get; set; }
         public DateTime? LeaseExpiresAt { get; set; }
         public string? LeasedBy { get; set; }
+        public string? QueueMessageId { get; set; }
+        public DateTime? QueuedAt { get; set; }
         public DateTime? FinishedAt { get; set; }
         public string? ResultMessage { get; set; }
         public string? HighWaterMark { get; set; }

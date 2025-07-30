@@ -31,6 +31,16 @@ public interface ISyncLogEntry
     string? LeasedBy { get; set; }
 
     /// <summary>
+    /// Gets or sets the message ID when fanning out sync operations via a queue.
+    /// </summary>
+    string? QueueMessageId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the date and time when the sync operation was queued.
+    /// </summary>
+    DateTime? QueuedAt { get; set; }
+
+    /// <summary>
     /// Gets or sets the date and time when the sync operation finished.
     /// </summary>
     DateTime? FinishedAt { get; set; }
