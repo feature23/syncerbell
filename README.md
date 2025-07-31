@@ -12,9 +12,12 @@ and handle the persistence of synchronization logs.
 Syncerbell is built around the concept of "entities" that need to be
 synchronized. An entity is an abstract concept that represents a piece of
 data that needs to be kept in sync with a remote service or database. This
-could be a database record, a file, or any other piece of data that needs to
+could be a database table, a file, or any other piece of data that needs to
 be synchronized. It could even be an entire database, or a collection of
-entities that need to be synchronized together.
+entities that need to be synchronized together. Entities should generally
+be at least a "relation" of multiple records of data, such as a database 
+table, and not an individual record or row. Tracking the full synchronization
+state of individual rows of data may cause performance concerns.
 
 Syncerbell is not aware of any external concerns like HTTP requests,
 your app's database, or any other external service. It is designed to just
