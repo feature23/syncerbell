@@ -7,7 +7,7 @@ namespace Syncerbell;
 /// Provides synchronization services for all registered entities, handling eligibility, logging, and execution.
 /// </summary>
 public class SyncService(
-    SyncerbellOptions options,
+    SyncEntityResolver syncEntityResolver,
     IServiceProvider serviceProvider,
     ISyncLogPersistence syncLogPersistence,
     ILogger<SyncService> logger)
@@ -19,7 +19,7 @@ public class SyncService(
     /// <inheritdoc />
     public async Task<IReadOnlyList<SyncResult>> SyncAllEligible(SyncTriggerType triggerType, CancellationToken cancellationToken = default)
     {
-        var entities = await GetAllEntities(cancellationToken);
+        var entities = await syncEntityResolver.ResolveEntities(cancellationToken);
 
         if (entities.Count == 0)
         {
@@ -74,7 +74,7 @@ public class SyncService(
             throw new InvalidOperationException($"Sync log entry with identifier '{syncLogEntryId}' not found.");
         }
 
-        var allEntities = await GetAllEntities(cancellationToken);
+        var allEntities = await syncEntityResolver.ResolveEntities(cancellationToken);
 
         var entity = allEntities.FirstOrDefault(e => e.Entity == log.Entity && e.SchemaVersion == log.SchemaVersion && e.ParametersJson == log.ParametersJson)
                      ?? throw new InvalidOperationException($"No entity configuration found for entity {log.Entity} " +
@@ -92,37 +92,6 @@ public class SyncService(
         }
 
         return await ProcessSyncLogEntry(log, priorSyncInfo, triggerType, entity, cancellationToken);
-    }
-
-    /// <summary>
-    /// Gets all entities configured for synchronization, including both statically configured and dynamically provided entities.
-    /// </summary>
-    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>A list of all sync entity options.</returns>
-    private async Task<List<SyncEntityOptions>> GetAllEntities(CancellationToken cancellationToken)
-    {
-        var entities = new List<SyncEntityOptions>(options.Entities);
-
-        if (options.EntityProviderType is { } entityProviderType)
-        {
-            var entityProvider = serviceProvider.GetRequiredService(entityProviderType) as IEntityProvider
-                ?? throw new InvalidOperationException(
-                    $"Entity provider type {entityProviderType.FullName} is not registered or does not implement {nameof(IEntityProvider)}.");
-
-            var additionalEntities = await entityProvider.GetEntities(cancellationToken);
-
-            if (additionalEntities.Count == 0)
-            {
-                logger.LogWarning("Entity provider returned no additional entities. Using configured entities only.");
-            }
-            else
-            {
-                logger.LogInformation("Entity provider returned {Count} additional entities.", additionalEntities.Count);
-                entities.AddRange(additionalEntities);
-            }
-        }
-
-        return entities;
     }
 
     /// <summary>

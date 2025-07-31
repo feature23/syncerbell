@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Syncerbell;
@@ -7,8 +6,7 @@ namespace Syncerbell;
 /// Implementation of ISyncQueueService that creates queued sync log entries for distributed processing.
 /// </summary>
 public class SyncQueueService(
-    SyncerbellOptions options,
-    IServiceProvider serviceProvider,
+    SyncEntityResolver entityResolver,
     ISyncLogPersistence syncLogPersistence,
     ILogger<SyncQueueService> logger)
     : ISyncQueueService
@@ -17,26 +15,7 @@ public class SyncQueueService(
     public async Task<IReadOnlyList<ISyncLogEntry>> CreateAllQueuedSyncEntries(SyncTriggerType syncTrigger,
         CancellationToken cancellationToken = default)
     {
-        var entities = new List<SyncEntityOptions>(options.Entities);
-
-        if (options.EntityProviderType is { } entityProviderType)
-        {
-            var entityProvider = serviceProvider.GetRequiredService(entityProviderType) as IEntityProvider
-                ?? throw new InvalidOperationException(
-                    $"Entity provider type {entityProviderType.FullName} is not registered or does not implement {nameof(IEntityProvider)}.");
-
-            var additionalEntities = await entityProvider.GetEntities(cancellationToken);
-
-            if (additionalEntities.Count == 0)
-            {
-                logger.LogWarning("Entity provider returned no additional entities. Using configured entities only.");
-            }
-            else
-            {
-                logger.LogInformation("Entity provider returned {Count} additional entities.", additionalEntities.Count);
-                entities.AddRange(additionalEntities);
-            }
-        }
+        var entities = await entityResolver.ResolveEntities(cancellationToken);
 
         if (entities.Count == 0)
         {
