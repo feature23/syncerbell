@@ -37,6 +37,11 @@ public class SyncLogEntry : ISyncLogEntry
     /// </summary>
     public int? SchemaVersion { get; init; }
 
+    /// <summary>
+    /// Gets the type of trigger that initiated the sync operation.
+    /// </summary>
+    public required SyncTriggerType TriggerType { get; init; }
+
     /// <inheritdoc />
     public SyncStatus SyncStatus { get; set; }
 
@@ -54,6 +59,14 @@ public class SyncLogEntry : ISyncLogEntry
     [StringLength(maximumLength: 100)]
     [Unicode(false)]
     public string? LeasedBy { get; set; }
+
+    /// <inheritdoc />
+    [StringLength(maximumLength: 100)]
+    [Unicode(false)]
+    public string? QueueMessageId { get; set; }
+
+    /// <inheritdoc />
+    public DateTime? QueuedAt { get; set; }
 
     /// <inheritdoc />
     public DateTime? FinishedAt { get; set; }
@@ -75,6 +88,10 @@ public class SyncLogEntry : ISyncLogEntry
 
     /// <inheritdoc />
     public int? RecordCount { get; set; }
+
+    /// <inheritdoc />
+    [NotMapped]
+    string ISyncLogEntry.Id => Id.ToString();
 
     /// <summary>
     /// Gets or sets the row version for concurrency checking.

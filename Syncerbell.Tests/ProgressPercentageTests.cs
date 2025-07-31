@@ -4,17 +4,26 @@ public class ProgressPercentageTests
 {
     private class TestSyncLogEntry : ISyncLogEntry
     {
+        private readonly Guid _id = Guid.NewGuid();
+
+        public int? SchemaVersion => null;
+        public SyncTriggerType TriggerType => SyncTriggerType.Manual;
         public SyncStatus SyncStatus { get; set; }
         public DateTime CreatedAt { get; } = DateTime.UtcNow;
         public DateTime? LeasedAt { get; set; }
         public DateTime? LeaseExpiresAt { get; set; }
         public string? LeasedBy { get; set; }
+        public string? QueueMessageId { get; set; }
+        public DateTime? QueuedAt { get; set; }
         public DateTime? FinishedAt { get; set; }
         public string? ResultMessage { get; set; }
         public string? HighWaterMark { get; set; }
         public int? ProgressValue { get; set; }
         public int? ProgressMax { get; set; }
         public int? RecordCount { get; set; }
+        public string Id => _id.ToString();
+        public string Entity => "TestEntity";
+        public string? ParametersJson => null;
     }
 
     [Theory]

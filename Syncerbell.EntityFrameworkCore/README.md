@@ -21,11 +21,14 @@ CREATE TABLE [dbo].[SyncLogEntries] (
     Entity varchar(100) NOT NULL,
     ParametersJson nvarchar(100) NULL,
     SchemaVersion int NULL,
+    TriggerType int NOT NULL CONSTRAINT [DF_SyncLogEntries_TriggerType] DEFAULT 0,
     SyncStatus int NOT NULL CONSTRAINT [DF_SyncLogEntries_SyncStatus] DEFAULT 1,
     CreatedAt datetime2 NOT NULL CONSTRAINT [DF_SyncLogEntries_CreatedAt] DEFAULT GETUTCDATE(),
     LeasedAt datetime2 NULL,
     LeaseExpiresAt datetime2 NULL,
     LeasedBy varchar(100) NULL,
+    QueueMessageId varchar(100) NULL,
+    QueuedAt datetime2 NULL,
     FinishedAt datetime2 NULL,
     ResultMessage nvarchar(MAX) NULL,
     HighWaterMark varchar(100) NULL,
@@ -82,17 +85,23 @@ GO
 ## Migrating to 0.5.0
 
 The 0.5.0 release adds several new columns to the SyncLogEntries table for enhanced tracking capabilities:
+- `TriggerType` for tracking the type of trigger that initiated the sync operation
 - `ProgressValue` for tracking current progress amount
 - `ProgressMax` for tracking maximum progress value
 - `RecordCount` for tracking total number of records processed
+- `QueueMessageId` for tracking message IDs when fanning out sync operations via a queue
+- `QueuedAt` for tracking when sync operations are queued
 
 If you are upgrading from an earlier version and not using dacpac deployment, you need to run the following SQL script
 to add the new columns:
 
 ```tsql
 ALTER TABLE [dbo].[SyncLogEntries]
-ADD [ProgressValue] int NULL,
+ADD [TriggerType] int NOT NULL CONSTRAINT [DF_SyncLogEntries_TriggerType] DEFAULT 0,
+    [ProgressValue] int NULL,
     [ProgressMax] int NULL,
-    [RecordCount] int NULL;
+    [RecordCount] int NULL,
+    [QueueMessageId] varchar(100) NULL,
+    [QueuedAt] datetime2 NULL;
 GO
 ```

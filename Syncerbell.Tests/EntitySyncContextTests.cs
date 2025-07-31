@@ -22,7 +22,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -62,7 +62,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -91,7 +91,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -117,7 +117,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -142,7 +142,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -173,7 +173,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }
@@ -205,7 +205,7 @@ public class EntitySyncContextTests
             PriorSyncInfo = new PriorSyncInfo
             {
                 HighWaterMark = null,
-                LastSyncQueuedAt = null,
+                LastSyncCreatedAt = null,
                 LastSyncLeasedAt = null,
                 LastSyncCompletedAt = null
             }

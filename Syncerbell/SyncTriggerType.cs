@@ -6,9 +6,9 @@ namespace Syncerbell;
 public enum SyncTriggerType
 {
     /// <summary>
-    /// A custom trigger type, typically used for user-defined or application-specific scenarios.
+    /// An unknown trigger type, used when the trigger is not specified or recognized.
     /// </summary>
-    Custom = 0,
+    Unknown = 0,
     /// <summary>
     /// A timer-based trigger, such as a scheduled or periodic sync.
     /// </summary>

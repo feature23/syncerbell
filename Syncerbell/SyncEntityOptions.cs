@@ -63,6 +63,11 @@ public class SyncEntityOptions(string entity, Type entitySyncType)
     public SortedDictionary<string, object?>? Parameters { get; set; }
 
     /// <summary>
+    /// Gets the serialized JSON representation of the parameters, or null if no parameters are set.
+    /// </summary>
+    public string? ParametersJson => ParameterSerialization.Serialize(Parameters);
+
+    /// <summary>
     /// Gets or sets the strategy to determine if the entity is eligible for synchronization.
     /// <para />
     /// Default is an <see cref="IntervalEligibilityStrategy"/> with a 1-day interval.

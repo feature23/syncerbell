@@ -18,7 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 		LICENSE = LICENSE
 		global.json = global.json
+		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleInMemoryQueue", "ExampleInMemoryQueue\ExampleInMemoryQueue.csproj", "{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,8 +49,13 @@ Global
 		{C844F729-43EB-4D7E-8CA5-BDCBF83A971E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C844F729-43EB-4D7E-8CA5-BDCBF83A971E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C844F729-43EB-4D7E-8CA5-BDCBF83A971E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BE825FA8-9B20-40C8-B233-65250AAD268D} = {7C18AD40-956C-46D5-96E5-4DA767C38067}
+		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79} = {7C18AD40-956C-46D5-96E5-4DA767C38067}
 	EndGlobalSection
 EndGlobal

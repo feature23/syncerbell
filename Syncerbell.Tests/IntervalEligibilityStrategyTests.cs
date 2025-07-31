@@ -19,7 +19,7 @@ public class IntervalEligibilityStrategyTests
             PriorSyncInfo = new PriorSyncInfo()
             {
                 LastSyncLeasedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
-                LastSyncQueuedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
+                LastSyncCreatedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
                 LastSyncCompletedAt = null,
                 HighWaterMark = null,
             },

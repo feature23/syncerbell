@@ -6,6 +6,31 @@
 public interface ISyncLogEntry
 {
     /// <summary>
+    /// Gets an identifier for locating the sync operation in logs or other systems.
+    /// </summary>
+    string Id { get; }
+
+    /// <summary>
+    /// Gets the name of the entity being synchronized.
+    /// </summary>
+    string Entity { get; }
+
+    /// <summary>
+    /// Gets the serialized parameters associated with the entity, if any.
+    /// </summary>
+    string? ParametersJson { get; }
+
+    /// <summary>
+    /// Gets the schema version of the entity, if specified.
+    /// </summary>
+    int? SchemaVersion { get; }
+
+    /// <summary>
+    /// Gets the type of trigger that initiated the sync operation.
+    /// </summary>
+    SyncTriggerType TriggerType { get; }
+
+    /// <summary>
     /// Gets or sets the current status of the sync operation.
     /// </summary>
     SyncStatus SyncStatus { get; set; }
@@ -29,6 +54,16 @@ public interface ISyncLogEntry
     /// Gets or sets the identifier of the machine or process that leased the sync operation.
     /// </summary>
     string? LeasedBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets the message ID when fanning out sync operations via a queue.
+    /// </summary>
+    string? QueueMessageId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the date and time when the sync operation was queued.
+    /// </summary>
+    DateTime? QueuedAt { get; set; }
 
     /// <summary>
     /// Gets or sets the date and time when the sync operation finished.

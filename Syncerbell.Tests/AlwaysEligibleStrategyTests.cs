@@ -6,8 +6,8 @@ public class AlwaysEligibleStrategyTests
     [InlineData(SyncTriggerType.Manual, 30)]
     [InlineData(SyncTriggerType.Timer, null)]
     [InlineData(SyncTriggerType.Timer, 400)]
-    [InlineData(SyncTriggerType.Custom, null)]
-    [InlineData(SyncTriggerType.Custom, -1)] // in the future? doesn't matter.
+    [InlineData(SyncTriggerType.Unknown, null)]
+    [InlineData(SyncTriggerType.Unknown, -1)] // in the future? doesn't matter.
     [Theory]
     public async Task AlwaysEligible_AlwaysReturnsTrue(SyncTriggerType syncTriggerType, int? lastSyncDaysAgo)
     {
@@ -20,7 +20,7 @@ public class AlwaysEligibleStrategyTests
             PriorSyncInfo = new PriorSyncInfo()
             {
                 LastSyncLeasedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
-                LastSyncQueuedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
+                LastSyncCreatedAt = lastSyncDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-1 * lastSyncDaysAgo.Value) : null,
                 LastSyncCompletedAt = null,
                 HighWaterMark = null,
             },

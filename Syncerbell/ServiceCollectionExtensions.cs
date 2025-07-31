@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<ISyncService, SyncService>();
+        services.AddSingleton<ISyncQueueService, SyncQueueService>();
+        services.AddSingleton<SyncEntityResolver>();
 
         foreach (var entity in options.Entities)
         {
