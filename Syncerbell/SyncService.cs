@@ -194,6 +194,7 @@ public class SyncService(
         log.ResultMessage = syncResult.Message ?? (syncResult.Success ? SyncSuccessMessage : SyncFailedMessage);
         log.FinishedAt = DateTime.UtcNow;
         log.HighWaterMark = syncResult.HighWaterMark;
+        log.RecordCount = syncResult.RecordCount;
         await syncLogPersistence.UpdateLogEntry(log, cancellationToken);
     }
 }
