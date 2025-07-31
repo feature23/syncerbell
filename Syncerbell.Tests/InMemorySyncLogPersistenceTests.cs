@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Syncerbell.Tests;
 
 public class InMemorySyncLogPersistenceTests
@@ -7,11 +9,12 @@ public class InMemorySyncLogPersistenceTests
     {
         // Arrange
         var options = new SyncerbellOptions();
-        var persistence = new InMemorySyncLogPersistence(options);
+        var logger = new LoggerFactory().CreateLogger<InMemorySyncLogPersistence>();
+        var persistence = new InMemorySyncLogPersistence(options, logger);
         var entity = new SyncEntityOptions("TestEntity", typeof(TestEntitySync));
 
         // Act
-        var result = await persistence.TryAcquireLogEntry(entity);
+        var result = await persistence.TryAcquireLogEntry(SyncTriggerType.Manual, entity);
 
         // Assert
         Assert.NotNull(result);
@@ -29,18 +32,19 @@ public class InMemorySyncLogPersistenceTests
     {
         // Arrange
         var options = new SyncerbellOptions();
-        var persistence = new InMemorySyncLogPersistence(options);
+        var logger = new LoggerFactory().CreateLogger<InMemorySyncLogPersistence>();
+        var persistence = new InMemorySyncLogPersistence(options, logger);
         var entity = new SyncEntityOptions("TestEntity", typeof(TestEntitySync));
 
-        var originalLogEntry = await persistence.TryAcquireLogEntry(entity);
+        var originalLogEntry = await persistence.TryAcquireLogEntry(SyncTriggerType.Manual, entity);
         Assert.NotNull(originalLogEntry?.SyncLogEntry);
         originalLogEntry.SyncLogEntry.LeaseExpiresAt = null;
         originalLogEntry.SyncLogEntry.LeasedAt = null;
         originalLogEntry.SyncLogEntry.LeasedBy = null;
-        await persistence.UpdateLogEntry(entity, originalLogEntry.SyncLogEntry);
+        await persistence.UpdateLogEntry(originalLogEntry.SyncLogEntry);
 
         // Act
-        var result = await persistence.TryAcquireLogEntry(entity);
+        var result = await persistence.TryAcquireLogEntry(SyncTriggerType.Manual, entity);
 
         // Assert
         Assert.NotNull(result);

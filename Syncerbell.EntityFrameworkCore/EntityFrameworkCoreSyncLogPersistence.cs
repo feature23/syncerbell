@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Syncerbell.EntityFrameworkCore;
 
@@ -8,30 +8,28 @@ namespace Syncerbell.EntityFrameworkCore;
 /// </summary>
 public class EntityFrameworkCoreSyncLogPersistence(
     SyncLogDbContext context,
-    SyncerbellOptions options)
+    SyncerbellOptions options,
+    ILogger<EntityFrameworkCoreSyncLogPersistence> logger)
     : ISyncLogPersistence
 {
-    /// <summary>
-    /// Attempts to acquire a log entry for the specified entity, creating or updating an entry as needed.
-    /// </summary>
-    /// <param name="entity">The entity options for which to acquire a log entry.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>An <see cref="AcquireLogEntryResult"/> containing the acquired log entry and prior sync info, or <c>null</c> if the entry is already leased.</returns>
-    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncEntityOptions entity, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncTriggerType triggerType, SyncEntityOptions entity,
+        CancellationToken cancellationToken = default)
     {
         return await ResilientTransaction.New(context).ExecuteAsync(async () =>
         {
-            var parametersJson = entity.Parameters != null
-                ? JsonSerializer.Serialize(entity.Parameters)
-                : null;
+            var parametersJson = ParameterSerialization.Serialize(entity.Parameters);
 
             var logEntry = await GetPendingOrInProgressLogEntry(entity, parametersJson, cancellationToken);
 
             if (logEntry?.LeaseExpiresAt != null && logEntry.LeaseExpiresAt < DateTime.UtcNow)
             {
                 // expired lease, set as expired and allow re-acquisition
-                logEntry.SyncStatus = SyncStatus.LeaseExpired;
+                logger.LogWarning(
+                    "Lease expired for log entry {LogEntryId} for entity {Entity}. Setting status to LeaseExpired.",
+                    logEntry.Id, entity.Entity);
 
+                logEntry.SyncStatus = SyncStatus.LeaseExpired;
                 await context.SaveChangesAsync(cancellationToken);
 
                 logEntry = null; // reset logEntry to allow creation of a new one
@@ -43,18 +41,66 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 return null;
             }
 
-            var priorSyncInfo = await GetPriorSyncInfo(entity, parametersJson, cancellationToken);
+            var priorSyncInfo = await GetPriorSyncInfo(entity.Entity, parametersJson, entity.SchemaVersion, cancellationToken);
 
-            logEntry = await CreateOrUpdateLogEntry(entity, parametersJson, logEntry, cancellationToken);
+            logEntry = await CreateOrUpdateLogEntry(triggerType, entity, parametersJson, logEntry, cancellationToken);
 
             return new AcquireLogEntryResult(logEntry, priorSyncInfo);
         }, cancellationToken);
     }
 
-    private async Task<PriorSyncInfo> GetPriorSyncInfo(SyncEntityOptions entity, string? parametersJson, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(ISyncLogEntry syncLogEntry,
+        SyncEntityOptions entity,
+        CancellationToken cancellationToken = default)
+    {
+        return await ResilientTransaction.New(context).ExecuteAsync(async () =>
+        {
+            if (syncLogEntry is not SyncLogEntry efSyncLogEntry)
+            {
+                throw new ArgumentException($"Log entry must be of type {nameof(SyncLogEntry)}", nameof(syncLogEntry));
+            }
+
+            // check if the log entry matches the entity and schema version
+            if (!syncLogEntry.Entity.Equals(entity.Entity) ||
+                syncLogEntry.SchemaVersion != entity.SchemaVersion ||
+                syncLogEntry.ParametersJson != ParameterSerialization.Serialize(entity.Parameters))
+            {
+                logger.LogWarning("Log entry {LogEntryId} does not match entity {Entity}, parameters, or schema version. Cannot acquire.", syncLogEntry.Id, entity.Entity);
+                return null;
+            }
+
+            // Check if lease is expired
+            if (syncLogEntry.LeaseExpiresAt != null && syncLogEntry.LeaseExpiresAt < DateTime.UtcNow)
+            {
+                // expired lease, set as expired and allow re-acquisition
+                syncLogEntry.SyncStatus = SyncStatus.LeaseExpired;
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            else if (syncLogEntry.LeasedAt != null)
+            {
+                // If the log entry is already leased or in progress, return null as we can't acquire it yet.
+                return null;
+            }
+
+            // Get prior sync info using the log entry data directly
+            var priorSyncInfo = await GetPriorSyncInfo(syncLogEntry.Entity, syncLogEntry.ParametersJson, syncLogEntry.SchemaVersion, cancellationToken);
+
+            // Lease the log entry
+            UpdateLogEntryLease(efSyncLogEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+
+            context.SyncLogEntries.Update(efSyncLogEntry);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return new AcquireLogEntryResult(efSyncLogEntry, priorSyncInfo);
+        }, cancellationToken);
+    }
+
+    private async Task<PriorSyncInfo> GetPriorSyncInfo(string entity, string? parametersJson, int? schemaVersion,
+        CancellationToken cancellationToken)
     {
         var priorEntriesQuery = context.SyncLogEntries
-            .Where(e => e.Entity == entity.Entity && e.ParametersJson == parametersJson && e.SchemaVersion == entity.SchemaVersion)
+            .Where(e => e.Entity == entity && e.ParametersJson == parametersJson && e.SchemaVersion == schemaVersion)
             .OrderByDescending(e => e.CreatedAt);
 
         return new PriorSyncInfo
@@ -66,7 +112,8 @@ public class EntityFrameworkCoreSyncLogPersistence(
         };
     }
 
-    private async Task<SyncLogEntry?> GetPendingOrInProgressLogEntry(SyncEntityOptions entity, string? parametersJson, CancellationToken cancellationToken)
+    private async Task<SyncLogEntry?> GetPendingOrInProgressLogEntry(SyncEntityOptions entity, string? parametersJson,
+        CancellationToken cancellationToken)
     {
         return await context.SyncLogEntries
             .Where(e => e.Entity == entity.Entity
@@ -76,8 +123,19 @@ public class EntityFrameworkCoreSyncLogPersistence(
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    private async Task<SyncLogEntry> CreateOrUpdateLogEntry(SyncEntityOptions entity,
-        string? parametersJson, SyncLogEntry? logEntry, CancellationToken cancellationToken)
+    private void UpdateLogEntryLease(SyncLogEntry logEntry, TimeSpan leaseExpiration)
+    {
+        logEntry.LeasedAt = DateTime.UtcNow;
+        logEntry.LeasedBy = options.MachineIdProvider();
+        logEntry.LeaseExpiresAt = DateTime.UtcNow.Add(leaseExpiration);
+    }
+
+    private async Task<SyncLogEntry> CreateOrUpdateLogEntry(
+        SyncTriggerType triggerType,
+        SyncEntityOptions entity,
+        string? parametersJson,
+        SyncLogEntry? logEntry,
+        CancellationToken cancellationToken)
     {
         if (logEntry == null)
         {
@@ -86,19 +144,15 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 Entity = entity.Entity,
                 ParametersJson = parametersJson,
                 SchemaVersion = entity.SchemaVersion,
+                TriggerType = triggerType,
                 SyncStatus = SyncStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                LeasedAt = DateTime.UtcNow,
-                LeasedBy = options.MachineIdProvider(),
-                LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration),
             };
             context.SyncLogEntries.Add(logEntry);
         }
         else
         {
-            logEntry.LeasedAt = DateTime.UtcNow;
-            logEntry.LeasedBy = options.MachineIdProvider();
-            logEntry.LeaseExpiresAt = DateTime.UtcNow.Add(entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            UpdateLogEntryLease(logEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
             context.SyncLogEntries.Update(logEntry);
         }
 
@@ -107,18 +161,25 @@ public class EntityFrameworkCoreSyncLogPersistence(
         return logEntry;
     }
 
-    /// <summary>
-    /// Updates an existing log entry for the specified entity.
-    /// </summary>
-    /// <param name="entity">The entity options associated with the log entry.</param>
-    /// <param name="logEntry">The log entry to update. Must be of type <see cref="SyncLogEntry"/>.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="logEntry"/> is not of type <see cref="SyncLogEntry"/>.</exception>
-    /// <returns>A completed <see cref="Task"/>.</returns>
-    public async Task UpdateLogEntry(SyncEntityOptions entity, ISyncLogEntry logEntry, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<ISyncLogEntry?> FindById(string id, CancellationToken cancellationToken = default)
+    {
+        if (!int.TryParse(id, out var intId))
+        {
+            throw new ArgumentException($"Identifier '{id}' is not a valid integer.", nameof(id));
+        }
+
+        return await context.SyncLogEntries
+            .FirstOrDefaultAsync(e => e.Id == intId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateLogEntry(ISyncLogEntry logEntry, CancellationToken cancellationToken = default)
     {
         if (logEntry is not SyncLogEntry entry)
+        {
             throw new ArgumentException($"Log entry must be of type {nameof(SyncLogEntry)}", nameof(logEntry));
+        }
 
         context.SyncLogEntries.Update(entry);
         await context.SaveChangesAsync(cancellationToken);

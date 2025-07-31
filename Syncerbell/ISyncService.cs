@@ -25,4 +25,15 @@ public interface ISyncService
     Task<SyncResult?> SyncEntityIfEligible(SyncTriggerType triggerType,
         SyncEntityOptions entity,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Synchronizes a specific entity from an already-queued sync log entry.
+    /// </summary>
+    /// <param name="syncLogEntryId">The id of the sync log entry to process.</param>
+    /// <param name="triggerType">The type of trigger that initiated the sync operation.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>Returns a task that resolves to a <see cref="SyncResult"/> object indicating the outcome of the sync operation, or null if the entry was not found or could not be processed.</returns>
+    Task<SyncResult?> SyncEntityIfEligible(string syncLogEntryId,
+        SyncTriggerType triggerType,
+        CancellationToken cancellationToken = default);
 }
