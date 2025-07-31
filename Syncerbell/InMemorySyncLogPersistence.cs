@@ -149,7 +149,7 @@ public class InMemorySyncLogPersistence(
             HighWaterMark = priorEntriesQuery.FirstOrDefault(i => i.HighWaterMark != null)?.HighWaterMark,
             LastSyncCompletedAt = priorEntriesQuery.FirstOrDefault(i => i.FinishedAt != null)?.FinishedAt,
             LastSyncLeasedAt = priorEntriesQuery.FirstOrDefault(i => i.LeasedAt != null)?.LeasedAt,
-            LastSyncQueuedAt = priorEntriesQuery.FirstOrDefault()?.CreatedAt,
+            LastSyncCreatedAt = priorEntriesQuery.FirstOrDefault()?.CreatedAt,
         };
     }
 

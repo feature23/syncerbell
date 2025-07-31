@@ -112,7 +112,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
         return new PriorSyncInfo
         {
             HighWaterMark = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.HighWaterMark != null, cancellationToken))?.HighWaterMark,
-            LastSyncQueuedAt = (await priorEntriesQuery.FirstOrDefaultAsync(cancellationToken))?.CreatedAt,
+            LastSyncCreatedAt = (await priorEntriesQuery.FirstOrDefaultAsync(cancellationToken))?.CreatedAt,
             LastSyncLeasedAt = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.LeasedAt != null, cancellationToken))?.LeasedAt,
             LastSyncCompletedAt = (await priorEntriesQuery.FirstOrDefaultAsync(i => i.FinishedAt != null, cancellationToken))?.FinishedAt,
         };

@@ -11,9 +11,9 @@ public class PriorSyncInfo
     public required string? HighWaterMark { get; init; }
 
     /// <summary>
-    /// Gets or sets the date and time when the last sync was queued for the entity.
+    /// Gets or sets the date and time when the last sync log entry was created for the entity.
     /// </summary>
-    public required DateTime? LastSyncQueuedAt { get; init; }
+    public required DateTime? LastSyncCreatedAt { get; init; }
 
     /// <summary>
     /// Gets or sets the date and time when the last sync was leased for the entity.
