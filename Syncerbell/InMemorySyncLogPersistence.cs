@@ -20,6 +20,7 @@ public class InMemorySyncLogPersistence(
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncTriggerType triggerType,
         SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
         CancellationToken cancellationToken = default)
     {
         var parametersJson = ParameterSerialization.Serialize(entity.Parameters);
@@ -34,7 +35,7 @@ public class InMemorySyncLogPersistence(
                                       && e.SchemaVersion == entity.SchemaVersion
                                       && e.SyncStatus is SyncStatus.Pending or SyncStatus.InProgress);
 
-            if (!TryProcessExistingEntry(logEntry))
+            if (!TryProcessExistingEntry(behavior, logEntry))
             {
                 return Task.FromResult<AcquireLogEntryResult?>(null);
             }
@@ -55,7 +56,10 @@ public class InMemorySyncLogPersistence(
                 entries.Add(logEntry);
             }
 
-            UpdateLogEntryLease(logEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            if (behavior != AcquireLeaseBehavior.DoNotAcquire)
+            {
+                UpdateLogEntryLease(logEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            }
 
             // Clone the log entry so that it can't be modified outside the writer lock
             return Task.FromResult<AcquireLogEntryResult?>(new AcquireLogEntryResult(logEntry.Clone(), priorSyncInfo));
@@ -67,7 +71,10 @@ public class InMemorySyncLogPersistence(
     }
 
     /// <inheritdoc />
-    public Task<AcquireLogEntryResult?> TryAcquireLogEntry(ISyncLogEntry logEntry, SyncEntityOptions entity, CancellationToken cancellationToken = default)
+    public Task<AcquireLogEntryResult?> TryAcquireLogEntry(ISyncLogEntry logEntry,
+        SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -87,14 +94,17 @@ public class InMemorySyncLogPersistence(
                 return Task.FromResult<AcquireLogEntryResult?>(null);
             }
 
-            if (!TryProcessExistingEntry(inMemoryEntry))
+            if (!TryProcessExistingEntry(behavior, inMemoryEntry))
             {
                 return Task.FromResult<AcquireLogEntryResult?>(null);
             }
 
             var priorSyncInfo = GetPriorSyncInfo(logEntry.Entity, logEntry.ParametersJson, logEntry.SchemaVersion);
 
-            UpdateLogEntryLease(inMemoryEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            if (behavior != AcquireLeaseBehavior.DoNotAcquire)
+            {
+                UpdateLogEntryLease(inMemoryEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            }
 
             // Clone the log entry so that it can't be modified outside the writer lock
             return Task.FromResult<AcquireLogEntryResult?>(new AcquireLogEntryResult(inMemoryEntry.Clone(), priorSyncInfo));
@@ -105,7 +115,7 @@ public class InMemorySyncLogPersistence(
         }
     }
 
-    private static bool TryProcessExistingEntry(InMemoryEntry? logEntry)
+    private static bool TryProcessExistingEntry(AcquireLeaseBehavior behavior, InMemoryEntry? logEntry)
     {
         if (logEntry?.LeaseExpiresAt != null && logEntry.LeaseExpiresAt < DateTime.UtcNow)
         {
@@ -114,7 +124,7 @@ public class InMemorySyncLogPersistence(
             return true;
         }
 
-        if (logEntry?.LeasedAt != null)
+        if (behavior != AcquireLeaseBehavior.ForceAcquire && logEntry?.LeasedAt != null)
         {
             // If the log entry is already leased or in progress, return false as we can't acquire it yet.
             return false;

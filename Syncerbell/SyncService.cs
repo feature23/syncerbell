@@ -49,7 +49,7 @@ public class SyncService(
         SyncEntityOptions entity,
         CancellationToken cancellationToken = default)
     {
-        var acquireResult = await syncLogPersistence.TryAcquireLogEntry(triggerType, entity, cancellationToken);
+        var acquireResult = await syncLogPersistence.TryAcquireLogEntry(triggerType, entity, AcquireLeaseBehavior.AcquireIfNotLeased, cancellationToken);
 
         if (acquireResult is not { SyncLogEntry: { } log, PriorSyncInfo: { } priorSyncInfo })
         {
@@ -82,7 +82,7 @@ public class SyncService(
                                                             $"and schema version {log.SchemaVersion?.ToString() ?? "null"} " +
                                                             $"from log entry {syncLogEntryId}.");
 
-        var acquireResult = await syncLogPersistence.TryAcquireLogEntry(log, entity, cancellationToken);
+        var acquireResult = await syncLogPersistence.TryAcquireLogEntry(log, entity, AcquireLeaseBehavior.AcquireIfNotLeased, cancellationToken);
 
         if (acquireResult is not { PriorSyncInfo: { } priorSyncInfo })
         {

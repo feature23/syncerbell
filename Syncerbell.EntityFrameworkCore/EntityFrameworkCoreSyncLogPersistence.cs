@@ -13,7 +13,9 @@ public class EntityFrameworkCoreSyncLogPersistence(
     : ISyncLogPersistence
 {
     /// <inheritdoc />
-    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncTriggerType triggerType, SyncEntityOptions entity,
+    public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncTriggerType triggerType,
+        SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
         CancellationToken cancellationToken = default)
     {
         return await ResilientTransaction.New(context).ExecuteAsync(async () =>
@@ -34,7 +36,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
 
                 logEntry = null; // reset logEntry to allow creation of a new one
             }
-            else if (logEntry?.LeasedAt != null)
+            else if (behavior != AcquireLeaseBehavior.ForceAcquire && logEntry?.LeasedAt != null)
             {
                 // If the log entry is already leased or in progress, return null as we can't acquire it yet.
                 // This could either be a pending or in-progress entry.
@@ -43,7 +45,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
 
             var priorSyncInfo = await GetPriorSyncInfo(entity.Entity, parametersJson, entity.SchemaVersion, cancellationToken);
 
-            logEntry = await CreateOrUpdateLogEntry(triggerType, entity, parametersJson, logEntry, cancellationToken);
+            logEntry = await CreateOrUpdateLogEntry(behavior, triggerType, entity, parametersJson, logEntry, cancellationToken);
 
             return new AcquireLogEntryResult(logEntry, priorSyncInfo);
         }, cancellationToken);
@@ -52,6 +54,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
     /// <inheritdoc />
     public async Task<AcquireLogEntryResult?> TryAcquireLogEntry(ISyncLogEntry syncLogEntry,
         SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
         CancellationToken cancellationToken = default)
     {
         return await ResilientTransaction.New(context).ExecuteAsync(async () =>
@@ -77,7 +80,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 syncLogEntry.SyncStatus = SyncStatus.LeaseExpired;
                 await context.SaveChangesAsync(cancellationToken);
             }
-            else if (syncLogEntry.LeasedAt != null)
+            else if (behavior != AcquireLeaseBehavior.ForceAcquire && syncLogEntry.LeasedAt != null)
             {
                 // If the log entry is already leased or in progress, return null as we can't acquire it yet.
                 return null;
@@ -87,7 +90,10 @@ public class EntityFrameworkCoreSyncLogPersistence(
             var priorSyncInfo = await GetPriorSyncInfo(syncLogEntry.Entity, syncLogEntry.ParametersJson, syncLogEntry.SchemaVersion, cancellationToken);
 
             // Lease the log entry
-            UpdateLogEntryLease(efSyncLogEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            if (behavior != AcquireLeaseBehavior.DoNotAcquire)
+            {
+                UpdateLogEntryLease(efSyncLogEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
+            }
 
             context.SyncLogEntries.Update(efSyncLogEntry);
             await context.SaveChangesAsync(cancellationToken);
@@ -131,6 +137,7 @@ public class EntityFrameworkCoreSyncLogPersistence(
     }
 
     private async Task<SyncLogEntry> CreateOrUpdateLogEntry(
+        AcquireLeaseBehavior behavior,
         SyncTriggerType triggerType,
         SyncEntityOptions entity,
         string? parametersJson,
@@ -149,14 +156,14 @@ public class EntityFrameworkCoreSyncLogPersistence(
                 CreatedAt = DateTime.UtcNow,
             };
             context.SyncLogEntries.Add(logEntry);
+            await context.SaveChangesAsync(cancellationToken);
         }
-        else
+        else if (behavior != AcquireLeaseBehavior.DoNotAcquire)
         {
             UpdateLogEntryLease(logEntry, entity.LeaseExpiration ?? options.DefaultLeaseExpiration);
             context.SyncLogEntries.Update(logEntry);
+            await context.SaveChangesAsync(cancellationToken);
         }
-
-        await context.SaveChangesAsync(cancellationToken);
 
         return logEntry;
     }

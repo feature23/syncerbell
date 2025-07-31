@@ -51,7 +51,7 @@ public class SyncQueueService(
         {
             try
             {
-                var acquireResult = await syncLogPersistence.TryAcquireLogEntry(syncTrigger, entity, cancellationToken);
+                var acquireResult = await syncLogPersistence.TryAcquireLogEntry(syncTrigger, entity, AcquireLeaseBehavior.DoNotAcquire, cancellationToken);
 
                 if (acquireResult is not { SyncLogEntry: { } logEntry })
                 {

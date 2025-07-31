@@ -17,10 +17,13 @@ public interface ISyncLogPersistence
     /// </remarks>
     /// <param name="triggerType">The type of trigger that initiated the sync operation.</param>
     /// <param name="entity">The entity for which to acquire a log entry.</param>
+    /// <param name="behavior">The behavior for acquiring the lease of the log entry.
+    /// See the documentation for <see cref="AcquireLeaseBehavior"/> for details.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>Asynchronously returns the acquired log entry details, or null.</returns>
     Task<AcquireLogEntryResult?> TryAcquireLogEntry(SyncTriggerType triggerType,
         SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -30,10 +33,13 @@ public interface ISyncLogPersistence
     /// </summary>
     /// <param name="syncLogEntry">The sync log entry to acquire.</param>
     /// <param name="entity">The entity options for the log entry to acquire.</param>
+    /// <param name="behavior">The behavior for acquiring the lease of the log entry.
+    /// See the documentation for <see cref="AcquireLeaseBehavior"/> for details.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>Asynchronously returns the acquired log entry details, or null.</returns>
     Task<AcquireLogEntryResult?> TryAcquireLogEntry(ISyncLogEntry syncLogEntry,
         SyncEntityOptions entity,
+        AcquireLeaseBehavior behavior = AcquireLeaseBehavior.AcquireIfNotLeased,
         CancellationToken cancellationToken = default);
 
     /// <summary>
