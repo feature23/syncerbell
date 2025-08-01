@@ -23,6 +23,9 @@ public class SyncLogDbContext(
     /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SyncLogEntry>(e => e.ToTable(efOptions.SyncLogEntriesTableName, efOptions.Schema));
+        modelBuilder.Entity<SyncLogEntry>(e =>
+            e.ToTable(efOptions.SyncLogEntriesTableName, efOptions.Schema)
+                .HasKey(i => i.Id)
+        );
     }
 }
