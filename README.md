@@ -68,11 +68,7 @@ resulting log entries (which is up to you to implement), and then for each one,
 calling the `ISyncService.SyncEntityIfEligible` method to process just that one 
 entity. This allows you to break down large synchronization operations into
 smaller, manageable pieces, while still keeping track of the overall synchronization 
-state of the entity. Note that this currently will not consider eligibility
-when determining whether to enqueue the entity, because that will be done when
-the `SyncEntityIfEligible` method is called. This means that you can enqueue
-entities that are not currently eligible for synchronization, and in case they
-become eligible before the next sync run, they will be processed as part of that run.
+state of the entity.
 
 ## Installation
 
