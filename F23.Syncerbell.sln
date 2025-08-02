@@ -23,6 +23,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleInMemoryQueue", "ExampleInMemoryQueue\ExampleInMemoryQueue.csproj", "{F8782B44-7714-4AC9-9F58-3B1D8BACBE79}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{5FA57817-B656-4CA6-9B08-C45873C1C568}"
+	ProjectSection(SolutionItems) = preProject
+		.github\copilot-instructions.md = .github\copilot-instructions.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{D460087F-C59A-4060-8379-3E11F41118C9}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,5 +67,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BE825FA8-9B20-40C8-B233-65250AAD268D} = {7C18AD40-956C-46D5-96E5-4DA767C38067}
 		{F8782B44-7714-4AC9-9F58-3B1D8BACBE79} = {7C18AD40-956C-46D5-96E5-4DA767C38067}
+		{5FA57817-B656-4CA6-9B08-C45873C1C568} = {51D4BEEE-AF61-46A3-9328-239AE103AD6C}
+		{D460087F-C59A-4060-8379-3E11F41118C9} = {5FA57817-B656-4CA6-9B08-C45873C1C568}
 	EndGlobalSection
 EndGlobal
