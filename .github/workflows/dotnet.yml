@@ -40,3 +40,6 @@ jobs:
           ./artifacts/*.nupkg
           ./artifacts/*.snupkg
         if-no-files-found: warn
+    - name: Publish to NuGet
+      if: github.event_name == 'push'
+      run: dotnet nuget push "./artifacts/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }}
