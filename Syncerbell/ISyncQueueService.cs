@@ -17,6 +17,7 @@ public interface ISyncQueueService
     /// details in the sync log.
     /// </remarks>
     /// <param name="syncTrigger">The type of trigger that initiated this sync operation (e.g., manual, timer).</param>
+    /// <param name="behavior">Specifies whether to queue all entities or only those that are eligible for sync.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
     /// <returns>
     /// A read-only list of sync log entries that were created and queued for processing.
@@ -24,6 +25,7 @@ public interface ISyncQueueService
     /// </returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
     Task<IReadOnlyList<ISyncLogEntry>> CreateAllQueuedSyncEntries(SyncTriggerType syncTrigger,
+        QueueBehavior behavior = QueueBehavior.QueueEligibleOnly,
         CancellationToken cancellationToken = default);
 
     /// <summary>

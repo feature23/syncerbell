@@ -13,6 +13,7 @@ public class SyncQueueService(
 {
     /// <inheritdoc />
     public async Task<IReadOnlyList<ISyncLogEntry>> CreateAllQueuedSyncEntries(SyncTriggerType syncTrigger,
+        QueueBehavior behavior = QueueBehavior.QueueEligibleOnly,
         CancellationToken cancellationToken = default)
     {
         var entities = await entityResolver.ResolveEntities(cancellationToken);
@@ -36,6 +37,23 @@ public class SyncQueueService(
                 {
                     logger.LogDebug("No log entry acquired for entity {EntityName}. Skipping queue creation.", entity.Entity);
                     continue;
+                }
+
+                // Check eligibility if behavior requires it
+                if (behavior == QueueBehavior.QueueEligibleOnly)
+                {
+                    var trigger = new SyncTrigger
+                    {
+                        TriggerType = syncTrigger,
+                        PriorSyncInfo = acquireResult.PriorSyncInfo
+                    };
+
+                    var isEligible = await entity.Eligibility.IsEligibleToSync(trigger, entity, cancellationToken);
+                    if (!isEligible)
+                    {
+                        logger.LogDebug("Entity {EntityName} is not eligible for sync. Skipping queue creation.", entity.Entity);
+                        continue;
+                    }
                 }
 
                 // Mark the entry as queued
