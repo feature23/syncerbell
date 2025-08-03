@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
         configureOptions?.Invoke(options);
 
         services.AddSingleton(options);
-        services.AddTransient<ISyncService, SyncService>();
+        services.AddScoped<ISyncService, SyncService>();
         services.AddTransient<ISyncQueueService, SyncQueueService>();
         services.AddTransient<SyncEntityResolver>();
 
