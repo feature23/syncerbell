@@ -44,7 +44,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection with in-memory persistence registered.</returns>
     public static IServiceCollection AddSyncerbellInMemoryPersistence(this IServiceCollection services)
     {
-        services.AddTransient<ISyncLogPersistence, InMemorySyncLogPersistence>();
+        services.AddSingleton<ISyncLogPersistence, InMemorySyncLogPersistence>();
         return services;
     }
 }
