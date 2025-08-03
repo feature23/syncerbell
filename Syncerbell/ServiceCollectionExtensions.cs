@@ -19,9 +19,9 @@ public static class ServiceCollectionExtensions
         configureOptions?.Invoke(options);
 
         services.AddSingleton(options);
-        services.AddSingleton<ISyncService, SyncService>();
-        services.AddSingleton<ISyncQueueService, SyncQueueService>();
-        services.AddSingleton<SyncEntityResolver>();
+        services.AddScoped<ISyncService, SyncService>();
+        services.AddTransient<ISyncQueueService, SyncQueueService>();
+        services.AddTransient<SyncEntityResolver>();
 
         foreach (var entity in options.Entities)
         {
@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
 
         if (options.EntityProviderType != null)
         {
-            services.AddSingleton(options.EntityProviderType);
+            services.AddTransient(options.EntityProviderType);
         }
 
         return services;
