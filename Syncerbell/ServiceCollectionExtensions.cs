@@ -19,9 +19,9 @@ public static class ServiceCollectionExtensions
         configureOptions?.Invoke(options);
 
         services.AddSingleton(options);
-        services.AddSingleton<ISyncService, SyncService>();
-        services.AddSingleton<ISyncQueueService, SyncQueueService>();
-        services.AddSingleton<SyncEntityResolver>();
+        services.AddTransient<ISyncService, SyncService>();
+        services.AddTransient<ISyncQueueService, SyncQueueService>();
+        services.AddTransient<SyncEntityResolver>();
 
         foreach (var entity in options.Entities)
         {
@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
 
         if (options.EntityProviderType != null)
         {
-            services.AddSingleton(options.EntityProviderType);
+            services.AddTransient(options.EntityProviderType);
         }
 
         return services;
@@ -44,7 +44,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection with in-memory persistence registered.</returns>
     public static IServiceCollection AddSyncerbellInMemoryPersistence(this IServiceCollection services)
     {
-        services.AddSingleton<ISyncLogPersistence, InMemorySyncLogPersistence>();
+        services.AddTransient<ISyncLogPersistence, InMemorySyncLogPersistence>();
         return services;
     }
 }
